@@ -3,16 +3,18 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
+
+	"github.com/sirupsen/logrus"
 )
 
 func CheckError(err error) {
 	if nil != err {
-		log.Fatal(err)
+		logrus.Fatal(err)
 	}
 }
 
 func RemoveStringElementFromStringSlice(slice_to_parse []string, element_to_remove string, must_exist ...bool) ([]string, error) {
+	logrus.Debug("RemoveStringElementFromStringSlice")
 	cut_index := 0
 	for _, array_element := range slice_to_parse {
 		if element_to_remove != array_element {

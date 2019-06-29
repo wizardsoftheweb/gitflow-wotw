@@ -11,7 +11,7 @@ type ConfigOptionArgs struct {
 	Value      string
 }
 
-const (
+var (
 	GitflowBranchMasterOption      = ConfigOptionArgs{"gitflow", "branches", "master", "master"}
 	GitflowBranchDevelopmentOption = ConfigOptionArgs{"gitflow", "branches", "development", "dev"}
 	GitflowPrefixFeatureOption     = ConfigOptionArgs{"gitflow", "prefix", "feature", "feature"}

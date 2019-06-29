@@ -3,11 +3,13 @@ package main
 import (
 	"errors"
 
+	"github.com/sirupsen/logrus"
 	"gopkg.in/src-d/go-git.v4"
 	format "gopkg.in/src-d/go-git.v4/plumbing/format/config"
 )
 
 func IsCwdInRepo(repo_path string) bool {
+	logrus.Debug("IsCwdInRepo")
 	_, err := OpenRepoFromPath(repo_path)
 	if git.ErrRepositoryNotExists == err {
 		return false
@@ -16,6 +18,7 @@ func IsCwdInRepo(repo_path string) bool {
 }
 
 func CanAppInitRepo(repo_path string) bool {
+	logrus.Debug("CanAppInitRepo")
 	if IsCwdInRepo(repo_path) {
 		return false
 	}
@@ -25,6 +28,7 @@ func CanAppInitRepo(repo_path string) bool {
 }
 
 func EnsureRepoIsUsable(repo_path string) (*git.Repository, error) {
+	logrus.Debug("EnsureRepoIsUsable")
 	CanAppInitRepo(repo_path)
 	repo, err := OpenRepoFromPath(repo_path)
 	CheckError(err)
@@ -49,7 +53,9 @@ var (
 )
 
 func EnsureNecessaryInitOptionsAreSet(git_config *format.Config) bool {
+	logrus.Debug("EnsureNecessaryInitOptionsAreSet")
 	for _, option_arg_set := range NecessaryInitSettings {
+		logrus.Trace(option_arg_set)
 		if !option_arg_set.isOptionSetInConfig(git_config) {
 			return false
 		}
@@ -59,6 +65,7 @@ func EnsureNecessaryInitOptionsAreSet(git_config *format.Config) bool {
 }
 
 func GitFlowInit(repo_path string) error {
+	logrus.Debug("GitFlowInit")
 	repo, err := EnsureRepoIsUsable(repo_path)
 	CheckError(err)
 	config, err := LoadConfig(repo)
