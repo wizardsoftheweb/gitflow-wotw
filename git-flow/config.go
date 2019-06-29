@@ -6,27 +6,6 @@ import (
 	format "gopkg.in/src-d/go-git.v4/plumbing/format/config"
 )
 
-const (
-	UnsetOptionValue = ""
-)
-
-type ConfigOptionArgs struct {
-	Section    string
-	Subsection string
-	Key        string
-	Value      string
-}
-
-const (
-	GitflowBranchMasterOption      = ConfigOptionArgs{"gitflow", "branches", "master", UnsetOptionValue}
-	GitflowBranchDevelopmentOption = ConfigOptionArgs{"gitflow", "branches", "development", UnsetOptionValue}
-	GitflowPrefixFeatureOption     = ConfigOptionArgs{"gitflow", "prefix", "feature", UnsetOptionValue}
-	GitflowPrefixReleaseOption     = ConfigOptionArgs{"gitflow", "prefix", "release", UnsetOptionValue}
-	GitflowPrefixHotfixOption      = ConfigOptionArgs{"gitflow", "prefix", "hotfix", UnsetOptionValue}
-	GitflowPrefixSupportOption     = ConfigOptionArgs{"gitflow", "prefix", "support", UnsetOptionValue}
-	GitflowPrefixVersiontagOption  = ConfigOptionArgs{"gitflow", "prefix", "versiontag", UnsetOptionValue}
-)
-
 func GetOptionValue(git_config *format.Config, section string, subsection string, key string) string {
 	if format.NoSubsection == subsection {
 		return git_config.Section(section).Option(key)
@@ -50,28 +29,6 @@ func (config_options_args *ConfigOptionArgs) New(section string, subsection stri
 
 func (config_options_args *ConfigOptionArgs) isOptionSetInConfig(git_config *format.Config) bool {
 	return IsOptionSet(git_config, config_options_args.Section, config_options_args.Subsection, config_options_args.Key)
-}
-
-var (
-	NecessaryInitSettings = []ConfigOptionArgs{
-		GitflowBranchDevelopmentOption,
-		GitflowBranchMasterOption,
-		GitflowPrefixFeatureOption,
-		GitflowPrefixHotfixOption,
-		GitflowPrefixReleaseOption,
-		GitflowPrefixSupportOption,
-		GitflowPrefixVersiontagOption,
-	}
-)
-
-func EnsureNecessaryInitOptionsAreSet(git_config *format.Config) bool {
-	for _, option_arg_set := range NecessaryInitSettings {
-		if !option_arg_set.isOptionSetInConfig(git_config) {
-			return false
-		}
-	}
-	return true
-
 }
 
 func LoadConfig(repo *git.Repository) (*config.Config, error) {
