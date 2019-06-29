@@ -57,6 +57,12 @@ func AreThereUnstagedChanges(repo *git.Repository, ignore_submodules bool) bool 
 	return 0 != len(files)
 }
 
-func GetLocalBranchNames(repo_config *config.Config) {
-	println("cool")
+func GetLocalBranchNames(repo_config *config.Config) []string {
+	names := make([]string, len(repo_config.Branches))
+	index := 0
+	for branch_name, _ := range repo_config.Branches {
+		names[index] = branch_name
+		index++
+	}
+	return names
 }
