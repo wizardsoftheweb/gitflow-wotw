@@ -34,7 +34,7 @@ func GetSubmoduleNames(work_tree *git.Worktree) []string {
 	return names
 }
 
-func AreThereUnstagedChanges(repo *git.Repository, ignore_submodules ...bool) bool {
+func AreThereUnstagedChanges(repo *git.Repository, ignore_submodules bool) bool {
 	work_tree, err := repo.Worktree()
 	CheckError(err)
 	changes, err := work_tree.Status()
@@ -45,13 +45,13 @@ func AreThereUnstagedChanges(repo *git.Repository, ignore_submodules ...bool) bo
 		files[index] = file
 		index++
 	}
-	if 0 < len(ignore_submodules) && ignore_submodules[0] {
+	if ignore_submodules {
 		files, _ = RemoveStringElementFromStringSlice(files, ".gitmodules")
 		for _, name := range GetSubmoduleNames(work_tree) {
 			files, _ = RemoveStringElementFromStringSlice(files, name)
 		}
 	}
-	return 0 == len(files)
+	return 0 != len(files)
 }
 
 func GetConfigOptions(options format.Options) {
