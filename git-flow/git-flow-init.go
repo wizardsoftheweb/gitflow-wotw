@@ -28,7 +28,8 @@ func CanAppInitRepo(repo_path string) bool {
 
 func EnsureRepoIsUsable(repo_path string) error {
 	if !CanAppInitRepo(repo_path) {
-		repo = OpenRepoFromPath(repo_path)
+		repo, err := OpenRepoFromPath(repo_path)
+		CheckError(err)
 		if IsRepoHeadless(repo) {
 			return errors.New("This repo does not have a proper HEAD")
 		} else if AreThereUnstagedChanges(repo, true) {
