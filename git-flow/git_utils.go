@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/sirupsen/logrus"
 	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
@@ -54,4 +55,8 @@ func AreThereUnstagedChanges(repo *git.Repository, ignore_submodules bool) bool 
 		}
 	}
 	return 0 != len(files)
+}
+
+func GetLocalBranchNames(repo_config *config.Config) {
+	println("cool")
 }

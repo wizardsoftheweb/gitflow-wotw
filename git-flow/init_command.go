@@ -66,8 +66,9 @@ func EnsureNecessaryInitOptionsAreSet(git_config *format.Config) bool {
 
 }
 
-func EnsureBranchesExist() {
+func EnsureBranchesExist(git_config *format.Config) error {
 	println("rad")
+	return nil
 }
 
 func GitFlowInit(context *cli.Context) error {
