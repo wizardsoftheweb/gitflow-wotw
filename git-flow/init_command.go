@@ -2,8 +2,10 @@ package main
 
 import (
 	"errors"
+	"os"
 
 	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
 	"gopkg.in/src-d/go-git.v4"
 	format "gopkg.in/src-d/go-git.v4/plumbing/format/config"
 )
@@ -64,7 +66,8 @@ func EnsureNecessaryInitOptionsAreSet(git_config *format.Config) bool {
 
 }
 
-func GitFlowInit(repo_path string) error {
+func GitFlowInit(context *cli.Context) error {
+	repo_path, _ := os.Getwd()
 	logrus.Debug("GitFlowInit")
 	repo, err := EnsureRepoIsUsable(repo_path)
 	CheckError(err)
@@ -76,3 +79,16 @@ func GitFlowInit(repo_path string) error {
 	}
 	return nil
 }
+
+var (
+	CliFlagForce = cli.BoolFlag{
+		Name: "force",
+	}
+	CommandInit = cli.Command{
+		Name: "init",
+		Flags: []cli.Flag{
+			CliFlagForce,
+		},
+		Action: GitFlowInit,
+	}
+)
