@@ -38,5 +38,7 @@ func EnsureRepoIsUsable(repo_path string) (*git.Repository, error) {
 func GitFlowInit(repo_path string) {
 	repo, err := EnsureRepoIsUsable(repo_path)
 	CheckError(err)
-	GetConfigValue(repo)
+	config, err := LoadConfig(repo)
+	CheckError(err)
+	EnsureNecessaryInitOptionsAreSet(config.Raw)
 }
