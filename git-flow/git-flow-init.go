@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"errors"
 	"log"
 	"os"
 
@@ -23,13 +23,29 @@ func IsCwdInRepo() bool {
 	return true
 }
 
-func GitFlowInit() {
-	current_path, _ := os.Getwd()
-	repo, err := OpenRepoFromPath(current_path)
-	if git.ErrRepositoryNotExists == err {
-		fmt.Println("not a repo")
+func CanAppInitRepo(repo_path string) bool {
+	err := GitInit(repo_path)
+	if git.ErrRepositoryAlreadyExists == err {
+		return false
 	} else {
-		IsRepoHeadless(repo)
-		AreThereUnstagedChanges(repo, true)
+		CheckError(err)
 	}
+	return true
+}
+
+func EnsureRepoIsUsable(repo_path string) error {
+	if !CanAppInitRepo(repo_path) {
+		repo = OpenRepoFromPath(repo_path)
+		if IsRepoHeadless(repo) {
+			return errors.New("This repo does not have a proper HEAD")
+		} else if AreThereUnstagedChanges(repo, true) {
+			return errors.New("There are unstaged changes")
+		}
+	}
+	return nil
+}
+
+func GitFlowInit(repo_path string) {
+	err := EnsureRepoIsUsable(repo_path)
+	CheckError(err)
 }
