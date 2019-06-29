@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"gopkg.in/src-d/go-git.v4"
+	format "gopkg.in/src-d/go-git.v4/plumbing/format/config"
 )
 
 func IsCwdInRepo(repo_path string) bool {
@@ -33,6 +34,28 @@ func EnsureRepoIsUsable(repo_path string) (*git.Repository, error) {
 		return nil, errors.New("There are unstaged changes")
 	}
 	return repo, nil
+}
+
+var (
+	NecessaryInitSettings = []ConfigOptionArgs{
+		GitflowBranchDevelopmentOption,
+		GitflowBranchMasterOption,
+		GitflowPrefixFeatureOption,
+		GitflowPrefixHotfixOption,
+		GitflowPrefixReleaseOption,
+		GitflowPrefixSupportOption,
+		GitflowPrefixVersiontagOption,
+	}
+)
+
+func EnsureNecessaryInitOptionsAreSet(git_config *format.Config) bool {
+	for _, option_arg_set := range NecessaryInitSettings {
+		if !option_arg_set.isOptionSetInConfig(git_config) {
+			return false
+		}
+	}
+	return true
+
 }
 
 func GitFlowInit(repo_path string) error {

@@ -17,6 +17,16 @@ type ConfigOptionArgs struct {
 	Value      string
 }
 
+const (
+	GitflowBranchMasterOption      = ConfigOptionArgs{"gitflow", "branches", "master", UnsetOptionValue}
+	GitflowBranchDevelopmentOption = ConfigOptionArgs{"gitflow", "branches", "development", UnsetOptionValue}
+	GitflowPrefixFeatureOption     = ConfigOptionArgs{"gitflow", "prefix", "feature", UnsetOptionValue}
+	GitflowPrefixReleaseOption     = ConfigOptionArgs{"gitflow", "prefix", "release", UnsetOptionValue}
+	GitflowPrefixHotfixOption      = ConfigOptionArgs{"gitflow", "prefix", "hotfix", UnsetOptionValue}
+	GitflowPrefixSupportOption     = ConfigOptionArgs{"gitflow", "prefix", "support", UnsetOptionValue}
+	GitflowPrefixVersiontagOption  = ConfigOptionArgs{"gitflow", "prefix", "versiontag", UnsetOptionValue}
+)
+
 func GetOptionValue(git_config *format.Config, section string, subsection string, key string) string {
 	if format.NoSubsection == subsection {
 		return git_config.Section(section).Option(key)
@@ -44,13 +54,13 @@ func (config_options_args *ConfigOptionArgs) isOptionSetInConfig(git_config *for
 
 var (
 	NecessaryInitSettings = []ConfigOptionArgs{
-		{"gitflow", "branches", "master", UnsetOptionValue},
-		{"gitflow", "branches", "development", UnsetOptionValue},
-		{"gitflow", "prefix", "feature", UnsetOptionValue},
-		{"gitflow", "prefix", "release", UnsetOptionValue},
-		{"gitflow", "prefix", "hotfix", UnsetOptionValue},
-		{"gitflow", "prefix", "support", UnsetOptionValue},
-		{"gitflow", "prefix", "versiontag", UnsetOptionValue},
+		GitflowBranchDevelopmentOption,
+		GitflowBranchMasterOption,
+		GitflowPrefixFeatureOption,
+		GitflowPrefixHotfixOption,
+		GitflowPrefixReleaseOption,
+		GitflowPrefixSupportOption,
+		GitflowPrefixVersiontagOption,
 	}
 )
 
