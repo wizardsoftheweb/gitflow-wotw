@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
+
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
+	format "gopkg.in/src-d/go-git.v4/plumbing/format/config"
 )
 
 func OpenRepoFromPath(repo_path string) (*git.Repository, error) {
@@ -49,4 +52,25 @@ func AreThereUnstagedChanges(repo *git.Repository, ignore_submodules ...bool) bo
 		}
 	}
 	return 0 == len(files)
+}
+
+func GetConfigOptions(options format.Options) {
+	for _, option := range options {
+		fmt.Println(option.Key, option.Value)
+	}
+}
+
+func GetConfigValue(repo *git.Repository) interface{} {
+	config, err := repo.Config()
+	CheckError(err)
+	for _, section := range config.Raw.Sections {
+		fmt.Println(section.Name, section)
+		GetConfigOptions(section.Options)
+		for _, subsection := range section.Subsections {
+			fmt.Println(subsection.Name)
+			GetConfigOptions(subsection.Options)
+		}
+	}
+	fmt.Println("rad")
+	return nil
 }
