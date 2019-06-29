@@ -76,9 +76,9 @@ func GitFlowInit(context *cli.Context) error {
 	logrus.Debug("GitFlowInit")
 	repo, err := EnsureRepoIsUsable(repo_path)
 	CheckError(err)
-	config, err := LoadConfig(repo)
+	repo_config, err := LoadConfig(repo)
 	CheckError(err)
-	init_options := EnsureNecessaryInitOptionsAreSet(config.Raw)
+	init_options := EnsureNecessaryInitOptionsAreSet(repo_config.Raw)
 	if !init_options {
 		return errors.New("Whoops")
 	}

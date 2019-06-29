@@ -38,7 +38,7 @@ func (config_options_args *ConfigOptionArgs) isOptionSetInConfig(git_config *for
 
 func LoadConfig(repo *git.Repository) (*config.Config, error) {
 	logrus.Debug("LoadConfig")
-	git_config, err := repo.Config()
+	repo_config, err := repo.Config()
 	CheckError(err)
-	return git_config, nil
+	return repo_config, nil
 }
