@@ -35,10 +35,14 @@ func EnsureRepoIsUsable(repo_path string) (*git.Repository, error) {
 	return repo, nil
 }
 
-func GitFlowInit(repo_path string) {
+func GitFlowInit(repo_path string) error {
 	repo, err := EnsureRepoIsUsable(repo_path)
 	CheckError(err)
 	config, err := LoadConfig(repo)
 	CheckError(err)
-	EnsureNecessaryInitOptionsAreSet(config.Raw)
+	init_options := EnsureNecessaryInitOptionsAreSet(config.Raw)
+	if !init_options {
+		return errors.New("Whoops")
+	}
+	return nil
 }
