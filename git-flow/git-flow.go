@@ -1,5 +1,8 @@
 package main
 
+import "os"
+
 func main() {
-	GitFlowInit()
+	repo_path, _ := os.Getwd()
+	GitFlowInit(repo_path)
 }

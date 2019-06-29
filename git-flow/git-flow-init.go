@@ -1,35 +1,42 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"os"
+	"errors"
 
 	"gopkg.in/src-d/go-git.v4"
 )
 
-func CheckError(err error) {
-	if nil != err {
-		log.Fatal(err)
-	}
-}
-
-func IsCwdInRepo() bool {
-	current_path, _ := os.Getwd()
-	_, err := OpenRepoFromPath(current_path)
+func IsCwdInRepo(repo_path string) bool {
+	_, err := OpenRepoFromPath(repo_path)
 	if git.ErrRepositoryNotExists == err {
 		return false
 	}
 	return true
 }
 
-func GitFlowInit() {
-	current_path, _ := os.Getwd()
-	repo, err := OpenRepoFromPath(current_path)
-	if git.ErrRepositoryNotExists == err {
-		fmt.Println("not a repo")
-	} else {
-		IsRepoHeadless(repo)
-		AreThereUnstagedChanges(repo, true)
+func CanAppInitRepo(repo_path string) bool {
+	if IsCwdInRepo(repo_path) {
+		return false
 	}
+	err := GitInit(repo_path)
+	CheckError(err)
+	return true
+}
+
+func EnsureRepoIsUsable(repo_path string) (*git.Repository, error) {
+	CanAppInitRepo(repo_path)
+	repo, err := OpenRepoFromPath(repo_path)
+	CheckError(err)
+	if IsRepoHeadless(repo) {
+		return nil, errors.New("This repo does not have a proper HEAD")
+	} else if AreThereUnstagedChanges(repo, true) {
+		return nil, errors.New("There are unstaged changes")
+	}
+	return repo, nil
+}
+
+func GitFlowInit(repo_path string) {
+	repo, err := EnsureRepoIsUsable(repo_path)
+	CheckError(err)
+	GetConfigValue(repo)
 }
