@@ -36,6 +36,14 @@ func (config_options_args *ConfigOptionArgs) isOptionSetInConfig(git_config *for
 	return IsOptionSet(git_config, config_options_args.Section, config_options_args.Subsection, config_options_args.Key)
 }
 
+func (config_options_args *ConfigOptionArgs) getValueWithDefault(git_config *format.Config, use_default bool) string {
+	logrus.Debug("getValueWithDefault")
+	value := GetOptionValue(git_config, config_options_args.Section, config_options_args.Subsection, config_options_args.Key)
+	if UnsetOptionValue == value && use_default {
+		return config_options_args.Value
+	}
+	return value
+}
 func LoadConfig(repo *git.Repository) (*config.Config, error) {
 	logrus.Debug("LoadConfig")
 	repo_config, err := repo.Config()
