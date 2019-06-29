@@ -3,7 +3,14 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 )
+
+func CheckError(err error) {
+	if nil != err {
+		log.Fatal(err)
+	}
+}
 
 func RemoveStringElementFromStringSlice(slice_to_parse []string, element_to_remove string, must_exist ...bool) ([]string, error) {
 	cut_index := 0

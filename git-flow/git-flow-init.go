@@ -2,17 +2,10 @@ package main
 
 import (
 	"errors"
-	"log"
 	"os"
 
 	"gopkg.in/src-d/go-git.v4"
 )
-
-func CheckError(err error) {
-	if nil != err {
-		log.Fatal(err)
-	}
-}
 
 func IsCwdInRepo() bool {
 	current_path, _ := os.Getwd()
