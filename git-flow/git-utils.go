@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 )
@@ -36,7 +34,6 @@ func GetSubmoduleNames(work_tree *git.Worktree) []string {
 func AreThereUnstagedChanges(repo *git.Repository, ignore_submodules ...bool) bool {
 	work_tree, err := repo.Worktree()
 	CheckError(err)
-	fmt.Println("Status")
 	changes, err := work_tree.Status()
 	CheckError(err)
 	files := make([]string, len(changes))
