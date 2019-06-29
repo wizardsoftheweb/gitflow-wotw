@@ -20,7 +20,7 @@ func IsRepoHeadless(repo *git.Repository) bool {
 	if plumbing.ErrReferenceNotFound == err {
 		return true
 	}
-	return true
+	return false
 }
 
 func GetSubmoduleNames(work_tree *git.Worktree) []string {
