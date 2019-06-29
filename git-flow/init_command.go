@@ -66,6 +66,10 @@ func EnsureNecessaryInitOptionsAreSet(git_config *format.Config) bool {
 
 }
 
+func EnsureBranchesExist() {
+	println("rad")
+}
+
 func GitFlowInit(context *cli.Context) error {
 	repo_path, _ := os.Getwd()
 	logrus.Debug("GitFlowInit")
