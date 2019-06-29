@@ -46,6 +46,11 @@ var (
 	NecessaryInitSettings = []ConfigOptionArgs{
 		{"gitflow", "branches", "master", UnsetOptionValue},
 		{"gitflow", "branches", "development", UnsetOptionValue},
+		{"gitflow", "prefix", "feature", UnsetOptionValue},
+		{"gitflow", "prefix", "release", UnsetOptionValue},
+		{"gitflow", "prefix", "hotfix", UnsetOptionValue},
+		{"gitflow", "prefix", "support", UnsetOptionValue},
+		{"gitflow", "prefix", "versiontag", UnsetOptionValue},
 	}
 )
 
