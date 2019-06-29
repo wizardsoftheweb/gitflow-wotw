@@ -2,14 +2,12 @@ package main
 
 import (
 	"errors"
-	"os"
 
 	"gopkg.in/src-d/go-git.v4"
 )
 
-func IsCwdInRepo() bool {
-	current_path, _ := os.Getwd()
-	_, err := OpenRepoFromPath(current_path)
+func IsCwdInRepo(repo_path string) bool {
+	_, err := OpenRepoFromPath(repo_path)
 	if git.ErrRepositoryNotExists == err {
 		return false
 	}
@@ -17,12 +15,11 @@ func IsCwdInRepo() bool {
 }
 
 func CanAppInitRepo(repo_path string) bool {
-	err := GitInit(repo_path)
-	if git.ErrRepositoryAlreadyExists == err {
+	if IsCwdInRepo(repo_path) {
 		return false
-	} else {
-		CheckError(err)
 	}
+	err := GitInit(repo_path)
+	CheckError(err)
 	return true
 }
 
