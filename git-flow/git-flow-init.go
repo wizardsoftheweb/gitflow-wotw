@@ -23,20 +23,20 @@ func CanAppInitRepo(repo_path string) bool {
 	return true
 }
 
-func EnsureRepoIsUsable(repo_path string) error {
-	if !CanAppInitRepo(repo_path) {
-		repo, err := OpenRepoFromPath(repo_path)
-		CheckError(err)
-		if IsRepoHeadless(repo) {
-			return errors.New("This repo does not have a proper HEAD")
-		} else if AreThereUnstagedChanges(repo, true) {
-			return errors.New("There are unstaged changes")
-		}
+func EnsureRepoIsUsable(repo_path string) (*git.Repository, error) {
+	CanAppInitRepo(repo_path)
+	repo, err := OpenRepoFromPath(repo_path)
+	CheckError(err)
+	if IsRepoHeadless(repo) {
+		return nil, errors.New("This repo does not have a proper HEAD")
+	} else if AreThereUnstagedChanges(repo, true) {
+		return nil, errors.New("There are unstaged changes")
 	}
-	return nil
+	return repo, nil
 }
 
 func GitFlowInit(repo_path string) {
-	err := EnsureRepoIsUsable(repo_path)
+	repo, err := EnsureRepoIsUsable(repo_path)
 	CheckError(err)
+	GetConfigValue(repo)
 }
