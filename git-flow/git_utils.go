@@ -1,10 +1,18 @@
 package main
 
 import (
+	"regexp"
+
 	"github.com/sirupsen/logrus"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
+)
+
+var (
+	// https://stackoverflow.com/a/12093994
+	// https://regex101.com/r/E2TCqU/3/tests
+	GitReferenceRestrictionsPattern = regexp.MustCompile(`(?m)^.*?/\..*?$|^.*?\.(lock)?$|^[^/]+$|^.*?\.\..*?$|^.*?[\000-\037\177 ~^:?*[]+.*?$|^\..*?$|^.*?/$|^.*?//.*?$|^.*?@\{.*?$|^@$|^.*?\\.*?$`)
 )
 
 func OpenRepoFromPath(repo_path string) (*git.Repository, error) {
@@ -65,4 +73,8 @@ func GetLocalBranchNames(repo_config *config.Config) []string {
 		index++
 	}
 	return names
+}
+
+func IsRefNameValid(ref_name string) bool {
+	return !GitReferenceRestrictionsPattern.Match(ref_name)
 }
