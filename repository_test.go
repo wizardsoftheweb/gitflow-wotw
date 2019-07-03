@@ -28,4 +28,7 @@ func (suite *RepositorySuite) TestDiscoverDotDir(c *C) {
 	result, err = suite.repo.discoverDotDir(suite.tmp_dir)
 	c.Assert(err, IsNil)
 	c.Assert(result, Equals, suite.dot_git_dir)
+	result, err = suite.repo.discoverDotDir(suite.dot_git_dir)
+	c.Assert(err, IsNil)
+	c.Assert(result, Equals, suite.dot_git_dir)
 }
