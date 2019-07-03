@@ -12,10 +12,11 @@ const (
 )
 
 type FsUtilsSuite struct {
-	current_file FileSystemObject
-	dummy_path   FileSystemObject
-	testfile     FileSystemObject
-	root_path    FileSystemObject
+	current_file     FileSystemObject
+	dummy_path       FileSystemObject
+	test_file        FileSystemObject
+	root_path        FileSystemObject
+	deeper_test_file FileSystemObject
 }
 
 var _ = Suite(&FsUtilsSuite{})
@@ -23,8 +24,9 @@ var _ = Suite(&FsUtilsSuite{})
 func (suite *FsUtilsSuite) SetUpSuite(c *C) {
 	suite.current_file = FileSystemObject(os.Args[0])
 	suite.dummy_path = FileSystemObject(dummy_path)
-	suite.testfile = FileSystemObject(filepath.Join(filepath.Dir(os.Args[0]), "testdata", "testfile"))
+	suite.test_file = FileSystemObject(filepath.Join(filepath.Dir(os.Args[0]), "testdata", "test_file"))
 	suite.root_path = FileSystemObject("/")
+	suite.deeper_test_file = FileSystemObject(filepath.Join(filepath.Dir(os.Args[0]), "testdata", "deeper", "file"))
 }
 
 func (suite *FsUtilsSuite) TestFileSystemObjectStringReturn(c *C) {
@@ -37,7 +39,14 @@ func (suite *FsUtilsSuite) TestFileSystemObjectExists(c *C) {
 }
 
 func (suite *FsUtilsSuite) TestFileSystemObjectSearchInParent(c *C) {
-	c.Assert(suite.testfile.SearchDirectoryAbove("gitflow-wotw.test"), Equals, true)
-	c.Assert(suite.testfile.SearchDirectoryAbove("nope"), Equals, false)
+	c.Assert(suite.deeper_test_file.SearchDirectoryAbove("test_file"), Equals, true)
+	c.Assert(suite.deeper_test_file.SearchDirectoryAbove("nope"), Equals, false)
 	c.Assert(suite.root_path.SearchDirectoryAbove("anything"), Equals, false)
+}
+
+func (suite *FsUtilsSuite) TestFileSystemObjectClimbUpwardsToFind(c *C) {
+	discovered, _ := suite.deeper_test_file.ClimbUpwardsToFind("test_file")
+	c.Assert(discovered, Equals, suite.test_file)
+	_, err := suite.root_path.ClimbUpwardsToFind("anything")
+	c.Assert(err, ErrorMatches, string(ErrRootReached.Error()))
 }

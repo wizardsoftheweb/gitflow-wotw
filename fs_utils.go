@@ -1,12 +1,17 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"os"
 	"path/filepath"
 )
 
 type FileSystemObject string
+
+var (
+	ErrRootReached = errors.New("Root directory reached without finding file")
+)
 
 func (path FileSystemObject) String() string {
 	return string(path)
@@ -44,10 +49,10 @@ func (path FileSystemObject) SearchDirectoryAbove(needle FileSystemObject) bool 
 
 func (path FileSystemObject) ClimbUpwardsToFind(needle FileSystemObject) (FileSystemObject, error) {
 	if path.isRoot() {
-		return error.New("File not found")
+		return path, ErrRootReached
 	}
 	if path.SearchDirectoryAbove(needle) {
-		return FileSystemObject(filepath.Join(path.Parent().String(), needle))
+		return FileSystemObject(filepath.Join(path.Parent().String(), needle.String())), nil
 	}
 	return path.Parent().ClimbUpwardsToFind(needle)
 }
