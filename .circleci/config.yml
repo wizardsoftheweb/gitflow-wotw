@@ -1,17 +1,18 @@
 version: 2
 jobs:
-  build:
+  test:
     docker:
       - image: circleci/golang:1.12
     working_directory: /go/src/github.com/thecjharries/gitflow-wotw-go
-
+    pre:
+      - go get github.com/mattn/goveralls
     steps:
       - checkout
-
       - run: go get gopkg.in/check.v1
       - run: go get github.com/manifoldco/promptui
       - run: go get github.com/sirupsen/logrus
       - run: go get github.com/urfave/cli
-
-      - run: go test
-      - run: go test -bench=.
+    override:
+      - go test -v -cover -race -coverprofile=/home/ubuntu/coverage.out
+    post:
+      - /home/ubuntu/.go_workspace/bin/goveralls -coverprofile=/home/ubuntu/coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
