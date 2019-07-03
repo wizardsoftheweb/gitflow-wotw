@@ -49,7 +49,6 @@ func (handler *ConfigFileHandler) parseOptionConfig(raw_config string) (GitConfi
 		key := result["key"]
 		value := result["value"]
 		options[key] = value
-		fmt.Println(key, value)
 	}
 	return options, nil
 }
@@ -70,9 +69,6 @@ func (handler *ConfigFileHandler) parseSectionConfig(raw_config string) (GitConf
 }
 
 func (handler *ConfigFileHandler) parseBlockConfig(raw_config string) (GitConfigSection, error) {
-	fmt.Println("-----------")
-	fmt.Println(raw_config)
-	fmt.Println("-----------")
 	section, err := handler.parseSectionConfig(raw_config)
 	if nil != err {
 		log.Fatal(err)
