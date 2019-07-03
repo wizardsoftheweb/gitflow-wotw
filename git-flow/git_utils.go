@@ -12,8 +12,12 @@ import (
 var (
 	// https://stackoverflow.com/a/12093994
 	// https://regex101.com/r/E2TCqU/3/tests
-	GitReferenceRestrictionsPattern = regexp.MustCompile(`(?m)^.*?/\..*?$|^.*?\.(lock)?$|^[^/]+$|^.*?\.\..*?$|^.*?[\000-\037\177 ~^:?*[]+.*?$|^\..*?$|^.*?/$|^.*?//.*?$|^.*?@\{.*?$|^@$|^.*?\\.*?$`)
+	GitReferenceRestrictionsPattern = regexp.MustCompile(`^@$|^\.|@\{|\\|/\.|\.\.|\/\/+|[\000-\037\177 ~^:?*[]+|(.(lock)?|/)$|^[^/]+$`)
 )
+
+func ValidateRefName(ref_name string) bool {
+	return !GitReferenceRestrictionsPattern.MatchString(ref_name)
+}
 
 func OpenRepoFromPath(repo_path string) (*git.Repository, error) {
 	logrus.Debug("OpenRepoFromPath")
