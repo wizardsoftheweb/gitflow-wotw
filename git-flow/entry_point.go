@@ -61,8 +61,11 @@ func BootstrapCli(verbosity_level int) *cli.App {
 }
 
 func main() {
-	sanitized_args, verbosity_level := CheckVerbosity(os.Args)
-	app := BootstrapCli(verbosity_level)
-	err := app.Run(sanitized_args)
-	CheckError(err)
+	// sanitized_args, verbosity_level := CheckVerbosity(os.Args)
+	// app := BootstrapCli(verbosity_level)
+	// err := app.Run(sanitized_args)
+	// CheckError(err)
+	directory, _ := os.Getwd()
+	repo, _ := OpenRepoFromPath(directory)
+	HasRemoteBranch(repo)
 }

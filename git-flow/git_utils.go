@@ -135,3 +135,30 @@ func GetLocalBranchNames(repo_config *config.Config) []string {
 	}
 	return names
 }
+
+func HasRemoteBranch(repo *git.Repository) bool {
+	list, err := repo.Remotes()
+	if nil != err {
+		CheckError(err)
+	}
+	for _, remote := range list {
+		fmt.Println(remote)
+	}
+	// err = repo.Fetch(&git.FetchOptions{
+	// 	RemoteName: "origin",
+	// })
+	// CheckError(err)
+	refs, err := repo.References()
+	CheckError(err)
+	err = refs.ForEach(func(ref *plumbing.Reference) error {
+		if ref.Type() == plumbing.SymbolicReference {
+			return nil
+		}
+
+		fmt.Println(ref)
+		return nil
+	})
+
+	CheckError(err)
+	return false
+}
