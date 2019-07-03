@@ -71,7 +71,7 @@ func EnsureRepoIsAvailable(directory string) (Repository, error) {
 	return repo, nil
 }
 
-func CheckInitialization(context *cli.Context, repo Repository) error {
+func CheckInitialization(context *cli.Context, repo *Repository) error {
 	logrus.Trace("CheckInitialization")
 	if IsGitflowInitialized(repo) && context.Bool("force") {
 		return ErrAlreadyInitialized
@@ -116,6 +116,24 @@ func ConstructBranchNameSuggestions(context *cli.Context, repo Repository) error
 	return nil
 }
 
+func BuildMasterBranch(context *cli.Context, repo *Repository) error {
+	master := PromptForBranchName(
+		fmt.Sprintf("Branch name for prod [%s]", ActiveCommandInitState.MasterDefaultSuggestion),
+	)
+	repo.config.Option(GIT_CONFIG_UPDATE, "gitflow", "branch", "master")
+	if ActiveCommandInitState.MasterExistenceCheck {
+		if !repo.DoesBranchExistLocally(master) {
+			remoteMaster := fmt.Sprintf("origin/%s", master)
+			if repo.DoesBranchExistRemotely(remoteMaster) {
+				execute("git", "branch", master, remoteMaster)
+			}
+		} else {
+			logrus.Warning(fmt.Sprintf("The chosen master branch %s does not exist locally", master))
+		}
+	}
+	return nil
+}
+
 func CommandInitAction(context *cli.Context) error {
 	logrus.Trace("CommandInitAction")
 	ActiveCommandInitState = CommandInitState{
@@ -133,7 +151,8 @@ func CommandInitAction(context *cli.Context) error {
 		logrus.Info("Using default branches")
 	}
 	repo.LoadLocalBranches()
-	fmt.Println(repo)
-	execute("pwd")
+	CheckInitialization(context, &repo)
+	ConstructBranchNameSuggestions(context, repo)
+	BuildMasterBranch(context, repo)
 	return nil
 }
