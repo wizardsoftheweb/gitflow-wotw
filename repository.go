@@ -4,6 +4,8 @@ import (
 	"errors"
 	"log"
 	"path/filepath"
+
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -17,6 +19,7 @@ type Repository struct {
 }
 
 func (repo Repository) discoverDotDir(root FileSystemObject) (FileSystemObject, error) {
+	logrus.Trace("discoverDotDir")
 	if root.isRoot() {
 		return root, ErrNotARepo
 	}
@@ -30,6 +33,7 @@ func (repo Repository) discoverDotDir(root FileSystemObject) (FileSystemObject, 
 }
 
 func (repo *Repository) LoadOrInit(directory string) error {
+	logrus.Trace("LoadOrInit")
 	dot_dir, err := repo.discoverDotDir(FileSystemObject(directory))
 	if nil != err {
 		if ErrNotARepo == err {

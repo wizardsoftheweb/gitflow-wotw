@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -33,6 +34,7 @@ var (
 )
 
 func EnsureRepoIsAvailable(directory string) (Repository, error) {
+	logrus.Trace("EnsureRepoIsAvailable")
 	var repo Repository
 	var err error
 	result := execute("git", "rev-parse", "--git-dir")
@@ -56,6 +58,7 @@ func EnsureRepoIsAvailable(directory string) (Repository, error) {
 }
 
 func CheckInitialization(context *cli.Context, repo Repository) error {
+	logrus.Trace("CheckInitialization")
 	if IsGitflowInitialized(repo.config) && context.Bool("force") {
 		return ErrAlreadyInitialized
 	}
@@ -63,6 +66,7 @@ func CheckInitialization(context *cli.Context, repo Repository) error {
 }
 
 func CommandInitAction(context *cli.Context) error {
+	logrus.Trace("CommandInitAction")
 	directory, _ := os.Getwd()
 	repo, err := EnsureRepoIsAvailable(directory)
 	if nil != err {

@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -53,6 +55,7 @@ var (
 )
 
 func FormatGitConfigSectionFileName(components ...string) string {
+	logrus.Trace("FormatGitConfigSectionFileName")
 	if "" == components[0] {
 		return ""
 	}
@@ -62,6 +65,7 @@ func FormatGitConfigSectionFileName(components ...string) string {
 	return fmt.Sprintf(GitConfigSectionFileHeaderFormats[HEADER_WITHOUT], components[0])
 }
 func FormatGitConfigSectionEnvironmentName(components ...string) string {
+	logrus.Trace("FormatGitConfigSectionEnvironmentName")
 	if "" == components[0] {
 		return ""
 	}
@@ -72,6 +76,7 @@ func FormatGitConfigSectionEnvironmentName(components ...string) string {
 }
 
 func (section *GitConfigSection) FileHeader() string {
+	logrus.Trace("FileHeader")
 	if 0 < len(section.Subheading) {
 		return FormatGitConfigSectionFileName(section.Heading, section.Subheading)
 	}
@@ -79,6 +84,7 @@ func (section *GitConfigSection) FileHeader() string {
 }
 
 func (section *GitConfigSection) EnvironmentHeader() string {
+	logrus.Trace("EnvironmentHeader")
 	if 0 < len(section.Subheading) {
 		return FormatGitConfigSectionEnvironmentName(section.Heading, section.Subheading)
 	}
@@ -86,11 +92,13 @@ func (section *GitConfigSection) EnvironmentHeader() string {
 }
 
 func (section *GitConfigSection) create(key string, value string) error {
+	logrus.Trace("create")
 	section.Options[key] = value
 	return nil
 }
 
 func (section *GitConfigSection) read(key string) (string, error) {
+	logrus.Trace("read")
 	value, ok := section.Options[key]
 	if !ok {
 		return "", ErrConfigOptionNotFound
@@ -99,11 +107,13 @@ func (section *GitConfigSection) read(key string) (string, error) {
 }
 
 func (section *GitConfigSection) update(key string, value string) error {
+	logrus.Trace("update")
 	section.Options[key] = value
 	return nil
 }
 
 func (section *GitConfigSection) delete(key string) error {
+	logrus.Trace("delete")
 	delete(section.Options, key)
 	return nil
 }
@@ -113,11 +123,13 @@ type GitConfig struct {
 }
 
 func (config *GitConfig) create(new_config GitConfigSection) error {
+	logrus.Trace("create")
 	config.Sections[new_config.FileHeader()] = new_config
 	return nil
 }
 
 func (config *GitConfig) read(components ...string) (GitConfigSection, error) {
+	logrus.Trace("read")
 	value, ok := config.Sections[FormatGitConfigSectionFileName(components...)]
 	if !ok {
 		value, ok = config.Sections[components[0]]
@@ -129,16 +141,19 @@ func (config *GitConfig) read(components ...string) (GitConfigSection, error) {
 }
 
 func (config *GitConfig) update(key string, value GitConfigSection) error {
+	logrus.Trace("update")
 	config.Sections[key] = value
 	return nil
 }
 
 func (config *GitConfig) delete(key string) error {
+	logrus.Trace("delete")
 	delete(config.Sections, key)
 	return nil
 }
 
 func (config *GitConfig) Option(action GitConfigCrud, components ...string) (string, error) {
+	logrus.Trace("Option")
 	var section_name string
 	var key, value int
 	if 4 == len(components) {

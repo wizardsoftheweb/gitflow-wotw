@@ -1,6 +1,9 @@
 package main
 
-import "github.com/urfave/cli"
+import (
+	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
+)
 
 var (
 	CommandSupport = cli.Command{
@@ -11,5 +14,6 @@ var (
 )
 
 func CommandSupportAction(context *cli.Context) error {
+	logrus.Trace("CommandSupportAction")
 	return nil
 }

@@ -5,6 +5,8 @@ import (
 	"log"
 	"os/exec"
 	"syscall"
+
+	"github.com/sirupsen/logrus"
 )
 
 type CommandResponse struct {
@@ -20,6 +22,7 @@ func (response *CommandResponse) Succeeded() bool {
 
 // https://stackoverflow.com/a/10385867
 func parseExitCode(err error) int {
+	logrus.Trace("parseExitCode")
 	if exiterr, ok := err.(*exec.ExitError); ok {
 		if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
 			return status.ExitStatus()
@@ -29,6 +32,7 @@ func parseExitCode(err error) int {
 }
 
 func execute(command ...string) CommandResponse {
+	logrus.Trace("execute")
 	stdout, stderr, err := RunCommand(command)
 	return CommandResponse{
 		stdout:   stdout,
@@ -39,6 +43,7 @@ func execute(command ...string) CommandResponse {
 }
 
 func RunCommand(sanitized_command []string) (string, string, error) {
+	logrus.Trace("RunCommand")
 	command := exec.Command(sanitized_command[0], sanitized_command[1:]...)
 	stdout, err := command.StdoutPipe()
 	if nil != err {

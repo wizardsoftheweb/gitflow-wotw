@@ -5,6 +5,8 @@ import (
 	"log"
 	"os/exec"
 	"regexp"
+
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -16,6 +18,7 @@ type ConfigEnvironmentHandler struct {
 }
 
 func (handler *ConfigEnvironmentHandler) loadConfig() error {
+	logrus.Trace("loadConfig")
 	command := exec.Command("git", "config", "--local", "--list")
 	output, err := command.CombinedOutput()
 	if nil != err {
@@ -26,6 +29,7 @@ func (handler *ConfigEnvironmentHandler) loadConfig() error {
 }
 
 func (handler *ConfigEnvironmentHandler) parseConfig() (GitConfig, error) {
+	logrus.Trace("parseConfig")
 	config := GitConfig{
 		Sections: make(map[string]GitConfigSection),
 	}
@@ -50,6 +54,7 @@ func (handler *ConfigEnvironmentHandler) parseConfig() (GitConfig, error) {
 }
 
 func (handler *ConfigEnvironmentHandler) dumpConfig(config GitConfig) []string {
+	logrus.Trace("dumpConfig")
 	lines := []string{}
 	for _, section := range config.Sections {
 		for key, value := range section.Options {

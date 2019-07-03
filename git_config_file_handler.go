@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"log"
 	"regexp"
+
+	"github.com/sirupsen/logrus"
 )
 
 type ConfigFileHandler struct {
@@ -19,15 +21,18 @@ var (
 )
 
 func (handler *ConfigFileHandler) createIfDoesNotExist() error {
+	logrus.Trace("createIfDoesNotExist")
 	fmt.Println("cool")
 	return nil
 }
 
 func (handler *ConfigFileHandler) exist() bool {
+	logrus.Trace("exist")
 	return handler.configFile.exists()
 }
 
 func (handler *ConfigFileHandler) loadConfig() error {
+	logrus.Trace("loadConfig")
 	raw_data, err := ioutil.ReadFile(handler.configFile.String())
 	if nil != err {
 		log.Fatal(err)
@@ -37,6 +42,7 @@ func (handler *ConfigFileHandler) loadConfig() error {
 }
 
 func (handler *ConfigFileHandler) parseOptionConfig(raw_config string) (GitConfigOptions, error) {
+	logrus.Trace("parseOptionConfig")
 	options := make(map[string]string)
 	for _, match := range GitConfigFileOptionPattern.FindAllStringSubmatch(raw_config, -1) {
 		result := map[string]string{}
@@ -53,6 +59,7 @@ func (handler *ConfigFileHandler) parseOptionConfig(raw_config string) (GitConfi
 }
 
 func (handler *ConfigFileHandler) parseSectionConfig(raw_config string) (GitConfigSection, error) {
+	logrus.Trace("parseSectionConfig")
 	section := GitConfigSection{}
 	for _, match := range GitConfigFileSectionPattern.FindAllStringSubmatch(raw_config, -1) {
 		result := map[string]string{}
@@ -68,6 +75,7 @@ func (handler *ConfigFileHandler) parseSectionConfig(raw_config string) (GitConf
 }
 
 func (handler *ConfigFileHandler) parseBlockConfig(raw_config string) (GitConfigSection, error) {
+	logrus.Trace("parseBlockConfig")
 	section, err := handler.parseSectionConfig(raw_config)
 	if nil != err {
 		log.Fatal(err)
@@ -80,6 +88,7 @@ func (handler *ConfigFileHandler) parseBlockConfig(raw_config string) (GitConfig
 	return section, nil
 }
 func (handler *ConfigFileHandler) parseConfig() (GitConfig, error) {
+	logrus.Trace("parseConfig")
 	sections := make(map[string]GitConfigSection)
 	for _, block := range GitConfigFileBlockPattern.FindAllString(handler.rawContents, -1) {
 		section, err := handler.parseBlockConfig(block)
@@ -95,6 +104,7 @@ func (handler *ConfigFileHandler) parseConfig() (GitConfig, error) {
 }
 
 func (handler *ConfigFileHandler) dumpOption(options GitConfigOptions) []string {
+	logrus.Trace("dumpOption")
 	lines := []string{}
 	for key, value := range options {
 		lines = append(
@@ -106,6 +116,7 @@ func (handler *ConfigFileHandler) dumpOption(options GitConfigOptions) []string 
 }
 
 func (handler *ConfigFileHandler) dumpSection(section GitConfigSection) []string {
+	logrus.Trace("dumpSection")
 	lines := []string{
 		section.FileHeader(),
 	}
@@ -113,6 +124,7 @@ func (handler *ConfigFileHandler) dumpSection(section GitConfigSection) []string
 }
 
 func (handler *ConfigFileHandler) dumpConfig(config GitConfig) []string {
+	logrus.Trace("dumpConfig")
 	lines := []string{}
 	for _, section := range config.Sections {
 		lines = append(lines, handler.dumpSection(section)...)

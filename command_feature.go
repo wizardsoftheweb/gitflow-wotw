@@ -1,6 +1,9 @@
 package main
 
-import "github.com/urfave/cli"
+import (
+	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
+)
 
 var (
 	CommandFeature = cli.Command{
@@ -11,5 +14,6 @@ var (
 )
 
 func CommandFeatureAction(context *cli.Context) error {
+	logrus.Trace("CommandFeatureAction")
 	return nil
 }
