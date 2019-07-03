@@ -26,6 +26,10 @@ func (path FileSystemObject) exists() bool {
 	return true
 }
 
+func (path FileSystemObject) isRoot() bool {
+	return "/" == path.String()
+}
+
 func (path FileSystemObject) SearchDirectoryAbove(needle FileSystemObject) bool {
 	search_directory := path.Parent().Parent()
 	if path.Parent() == search_directory {
@@ -36,4 +40,14 @@ func (path FileSystemObject) SearchDirectoryAbove(needle FileSystemObject) bool 
 		log.Fatal(err)
 	}
 	return 1 <= len(discovered)
+}
+
+func (path FileSystemObject) ClimbUpwardsToFind(needle FileSystemObject) (FileSystemObject, error) {
+	if path.isRoot() {
+		return error.New("File not found")
+	}
+	if path.SearchDirectoryAbove(needle) {
+		return FileSystemObject(filepath.Join(path.Parent().String(), needle))
+	}
+	return path.Parent().ClimbUpwardsToFind(needle)
 }
