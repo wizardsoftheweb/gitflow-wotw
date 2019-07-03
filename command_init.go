@@ -24,8 +24,9 @@ var (
 )
 
 func EnsureRepoIsAvailable(directory string) Repository {
+	var err error
 	if !DidCommandSucceed([]string{"git", "rev-parse", "--git-dir"}) {
-		println("radical")
+		_, _, err = executeCommand([]string{"git", "init"})
 	} else {
 		println("gnarly")
 	}
