@@ -17,6 +17,7 @@ func BootstrapCli() *cli.App {
 	app := cli.NewApp()
 	app.Name = "git-flow"
 	app.Version = GITFLOW_VERSION
+	app.HideVersion = true
 	app.Compiled = time.Now()
 	app.Commands = []cli.Command{
 		CommandInit,
