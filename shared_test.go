@@ -18,11 +18,11 @@ type GitFlowSuite struct {
 
 func (suite *GitFlowSuite) SetUpSuite(c *C) {
 	suite.root_path = FileSystemObject("/")
-	temp_dir, err := ioutil.TempDir("", "")
+	tmp_dir, err := ioutil.TempDir("", "")
 	if nil != err {
 		log.Fatal("Unable to build a temp directory")
 	}
-	suite.tmp_dir = FileSystemObject(temp_dir)
+	suite.tmp_dir = FileSystemObject(tmp_dir)
 }
 
 func (suite *GitFlowSuite) TearDownSuite(c *C) {

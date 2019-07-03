@@ -24,7 +24,7 @@ type FsUtilsSuite struct {
 
 var _ = Suite(&FsUtilsSuite{})
 
-func (suite *FsUtilsSuite) SetUpSuite(c *C) {
+func (suite *FsUtilsSuite) SetUpTest(c *C) {
 	suite.current_file = FileSystemObject(os.Args[0])
 	suite.dummy_path = FileSystemObject(dummy_path)
 	primary_temp_file, err := ioutil.TempFile(suite.tmp_dir.String(), "")
