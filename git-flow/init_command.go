@@ -102,7 +102,7 @@ func EnsureNecessaryInitOptionsAreSet(git_config *format.Config) bool {
 }
 
 func (init_options *CommandInitOptions) GenerateBranchSuggestion(gitflow_branch string) string {
-	suggestions, ok = BranchNameSuggestions[gitflow_branch]
+	suggestions, ok := BranchNameSuggestions[gitflow_branch]
 	if !ok {
 		logrus.Warn("%s does not have any suggestions", gitflow_branch)
 		return ""
@@ -127,10 +127,10 @@ func (init_options *CommandInitOptions) ConfigureMasterBranch(context *cli.Conte
 			init_options.ShouldCheckExistence = true
 			chosen_name := PromptForBranchName(fmt.Sprintf(
 				"Branch for production releases [%s]",
-				GenerateBranchSuggestion(repo, "master"),
+				init_options.GenerateBranchSuggestion("master"),
 			))
 			if "" == chosen_name {
-				chosen_name := GitflowBranchMasterOption.getValueWithDefault(repo_config.Raw, true)
+				chosen_name = GitflowBranchMasterOption.getValueWithDefault(repo_config.Raw, true)
 			}
 			init_options.FinalMasterValue = chosen_name
 		}
