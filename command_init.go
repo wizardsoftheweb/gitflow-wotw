@@ -9,8 +9,17 @@ import (
 
 var (
 	CommandInit = cli.Command{
-		Name:   "init",
-		Flags:  []cli.Flag{},
+		Name: "init",
+		Flags: []cli.Flag{
+			cli.BoolFlag{
+				Name:  "force, f",
+				Usage: "Forces the setting to be reinitialized",
+			},
+			cli.BoolFlag{
+				Name:  "defaults, d",
+				Usage: "Applies the defaults without prompting (when available)",
+			},
+		},
 		Action: CommandInitAction,
 	}
 )
