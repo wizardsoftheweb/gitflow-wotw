@@ -109,16 +109,26 @@ func (init_options *CommandInitOptions) ConfigureMasterBranch(context *cli.Conte
 			fmt.Fprintln(context.App.Writer, MessageNoBranches)
 			init_options.ShouldCheckExistence = false
 			init_options.DefaultMasterSuggestion = GitflowBranchMasterOption.getValueWithDefault(repo_config.Raw, true)
+		} else {
+			master_branch := PromptForBranchName(prompt_message)
 		}
 	}
+	return nil
 }
 
-func GenerateBranchSuggestion(repo_config *config.Config, gitflow_branch string) string {
-	config_option_args, ok := GitflowBranchOptArgs[gitflow_branch]
+func GenerateBranchSuggestion(repo *git.Repository, gitflow_branch string) string {
+	suggestions, ok = BranchNameSuggestions[gitflow_branch]
 	if !ok {
-		logrus.Warn("%s not in GitflowBranchOptArgs", gitflow_branch)
+		logrus.Warn("%s does not have any suggestions", gitflow_branch)
+		return ""
 	}
-	return config_option_args.getValueWithDefault(repo_config.Raw, true)
+	for _, name := range suggestions {
+		_, err := repo.Branch(name)
+		if nil == err {
+			return name
+		}
+	}
+	return ""
 }
 
 func GitFlowInit(context *cli.Context) error {
@@ -132,8 +142,8 @@ func GitFlowInit(context *cli.Context) error {
 		HasBeenInitialized: EnsureNecessaryInitOptionsAreSet(repo_config.Raw),
 		LocalBranches:      GetLocalBranchNames(repo_config),
 	}
-	err = init_options.ConfigureMasterBranch(context)
-	if err {
+	err = init_options.ConfigureMasterBranch(context, repo_config)
+	if nil != err {
 		logrus.Warn(err)
 	}
 	return nil
