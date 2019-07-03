@@ -4,14 +4,13 @@ jobs:
     docker:
       - image: circleci/golang:1.12
     working_directory: /go/src/github.com/thecjharries/gitflow-wotw-go
-
     steps:
+      - run: mkdir /tmp/cov
+      - run: go get github.com/mattn/goveralls
       - checkout
-
       - run: go get gopkg.in/check.v1
       - run: go get github.com/manifoldco/promptui
       - run: go get github.com/sirupsen/logrus
       - run: go get github.com/urfave/cli
-
-      - run: go test
-      - run: go test -bench=.
+      - run: go test -v -cover -race -coverprofile=/tmp/cov/coverage.out
+      - run: goveralls -coverprofile=/tmp/cov/coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
