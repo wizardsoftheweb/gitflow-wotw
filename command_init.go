@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -24,6 +25,10 @@ func CommandInitAction(context *cli.Context) error {
 	config := &ConfigFileHandler{}
 	config.configFile = FileSystemObject(filepath.Join(dot_dir.String(), "config"))
 	config.loadConfig()
-	config.parseConfig()
+	loadedConfig, err := config.parseConfig()
+	if nil != err {
+		log.Fatal(err)
+	}
+	fmt.Println(config.dumpConfig(loadedConfig))
 	return nil
 }

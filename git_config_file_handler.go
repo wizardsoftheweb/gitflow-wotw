@@ -94,7 +94,7 @@ func (handler *ConfigFileHandler) parseBlockConfig(raw_config string) (GitConfig
 	section.Options = options
 	return section, nil
 }
-func (handler *ConfigFileHandler) parseConfig() (map[string]GitConfigSection, error) {
+func (handler *ConfigFileHandler) parseConfig() (GitConfig, error) {
 	sections := make(map[string]GitConfigSection)
 	for _, block := range GitConfigBlockPattern.FindAllString(handler.rawContents, -1) {
 		section, err := handler.parseBlockConfig(block)
@@ -103,15 +103,18 @@ func (handler *ConfigFileHandler) parseConfig() (map[string]GitConfigSection, er
 		}
 		sections[section.Name()] = section
 	}
-	return sections, nil
+
+	return GitConfig{
+		Sections: sections,
+	}, nil
 }
 
 func (handler *ConfigFileHandler) dumpOption(options GitConfigOptions) []string {
 	lines := []string{}
 	for key, value := range options {
-		lines = lines.append(
+		lines = append(
 			lines,
-			fmt.Sprintf("\t%s = %s", a),
+			fmt.Sprintf("\t%s = %s", key, value),
 		)
 	}
 	return lines
@@ -121,13 +124,13 @@ func (handler *ConfigFileHandler) dumpSection(section GitConfigSection) []string
 	lines := []string{
 		section.Name(),
 	}
-	return append(lines, handler.dumpOption(section.Options))
+	return append(lines, handler.dumpOption(section.Options)...)
 }
 
-func (handler *ConfigFileHandler) dumpConfig(config GitConfig) string {
+func (handler *ConfigFileHandler) dumpConfig(config GitConfig) []string {
 	lines := []string{}
 	for _, section := range config.Sections {
-		lines = append(lines, handler.dumpSection(section))
+		lines = append(lines, handler.dumpSection(section)...)
 	}
 	return lines
 }
