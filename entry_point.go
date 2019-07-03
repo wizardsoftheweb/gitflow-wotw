@@ -1,6 +1,8 @@
 package main
 
-import "os"
+import (
+	"os"
+)
 
 var (
 	repo Repository
@@ -9,4 +11,6 @@ var (
 func main() {
 	cwd, _ := os.Getwd()
 	repo.LoadOrInit(cwd)
+	path := FileSystemObject(cwd)
+	path.SearchInParent("go-git2")
 }
