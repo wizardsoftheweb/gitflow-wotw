@@ -2,13 +2,16 @@ package main
 
 import "github.com/sirupsen/logrus"
 
-func IsGitflowInitialized(config GitConfig) bool {
+func IsGitflowInitialized(repo *Repository) bool {
 	logrus.Trace("IsGitflowInitialized")
 	for _, option := range OptionsToInitializeGitflow {
-		value, err := config.Option(GIT_CONFIG_READ, option.Section, option.Subsection, option.Key)
+		value, err := repo.config.Option(GIT_CONFIG_READ, option.Section, option.Subsection, option.Key)
 		if nil != err || "" == value {
 			return false
 		}
 	}
-	return true
+	if repo.HasBranchBeenConfigured("master") && repo.HasBranchBeenConfigured("dev") {
+		return true
+	}
+	return false
 }

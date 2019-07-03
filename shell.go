@@ -61,5 +61,7 @@ func RunCommand(sanitized_command []string) (string, string, error) {
 	final_out, _ := ioutil.ReadAll(stdout)
 	final_err, _ := ioutil.ReadAll(stderr)
 	err = command.Wait()
+	logrus.Debug(string(final_out))
+	logrus.Debug(string(final_err))
 	return string(final_out), string(final_err), err
 }
