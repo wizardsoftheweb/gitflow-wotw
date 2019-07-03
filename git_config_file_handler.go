@@ -14,9 +14,9 @@ type ConfigFileHandler struct {
 }
 
 var (
-	GitConfigBlockPattern   = regexp.MustCompile(`(?m)(?:^\[.*?$\s*)(^\s+.*?$\s?)+`)
-	GitConfigSectionPattern = regexp.MustCompile(`(?m)^\[\s*(?P<heading>.*?)(\s+["'](?P<subheading>.*?)["'])?\s*\]\s*$`)
-	GitConfigOptionPattern  = regexp.MustCompile(`(?m)^\s+(?P<key>.*?)\s*=\s*(?P<value>.*)\s*$`)
+	GitConfigFileBlockPattern   = regexp.MustCompile(`(?m)(?:^\[.*?$\s*)(^\s+.*?$\s?)+`)
+	GitConfigFileSectionPattern = regexp.MustCompile(`(?m)^\[\s*(?P<heading>.*?)(\s+["'](?P<subheading>.*?)["'])?\s*\]\s*$`)
+	GitConfigFileOptionPattern  = regexp.MustCompile(`(?m)^\s+(?P<key>.*?)\s*=\s*(?P<value>.*)\s*$`)
 )
 
 func (handler *ConfigFileHandler) createIfDoesNotExist() error {
