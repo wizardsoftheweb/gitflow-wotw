@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -27,8 +26,12 @@ func (path FileSystemObject) exists() bool {
 	return true
 }
 
-func (path FileSystemObject) SearchInParent(needle FileSystemObject) bool {
-	discovered, err := filepath.Glob(fmt.Sprintf("%s/%s", path.Parent().String(), needle.String()))
+func (path FileSystemObject) SearchDirectoryAbove(needle FileSystemObject) bool {
+	search_directory := path.Parent().Parent()
+	if path.Parent() == search_directory {
+		return false
+	}
+	discovered, err := filepath.Glob(filepath.Join(search_directory.String(), needle.String()))
 	if nil != err {
 		log.Fatal(err)
 	}
