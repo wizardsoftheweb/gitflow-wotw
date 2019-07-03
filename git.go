@@ -25,7 +25,7 @@ func IsWorkingTreeClean() bool {
 
 func IsIndexClean() bool {
 	logrus.Trace("IsIndexClean")
-	cleanliness := execute("git", "diff-index", "--cached", "--quiet", "--ignore-submodules", "HEAD")
+	cleanliness := execute("git", "diff-index", "--cached", "--quiet", "--ignore-submodules", "HEAD", "--")
 	return cleanliness.Succeeded()
 }
 
@@ -33,9 +33,10 @@ func EnsureCleanWorkingTree() error {
 	logrus.Trace("EnsureCleanWorkingTree")
 	if !IsWorkingTreeClean() {
 		return ErrUnstagedChanges
-	}
-	if !IsIndexClean() {
-		return ErrIndexUncommitted
+	} else {
+		if !IsIndexClean() {
+			return ErrIndexUncommitted
+		}
 	}
 	return nil
 }

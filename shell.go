@@ -33,6 +33,7 @@ func parseExitCode(err error) int {
 
 func execute(command ...string) CommandResponse {
 	logrus.Trace("execute")
+	logrus.Debug("execute", command)
 	stdout, stderr, err := RunCommand(command)
 	return CommandResponse{
 		stdout:   stdout,

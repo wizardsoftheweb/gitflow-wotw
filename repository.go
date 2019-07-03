@@ -32,6 +32,17 @@ func (repo Repository) discoverDotDir(root FileSystemObject) (FileSystemObject, 
 	return repo.discoverDotDir(root.Parent())
 }
 
+func (repo *Repository) LoadConfig() error {
+	var err error
+	repo.configHandler.configFile = FileSystemObject(filepath.Join(repo.dotDir.String(), "config"))
+	repo.configHandler.loadConfig()
+	repo.config, err = repo.configHandler.parseConfig()
+	if nil != err {
+		log.Fatal(err)
+	}
+	return nil
+}
+
 func (repo *Repository) LoadOrInit(directory string) error {
 	logrus.Trace("LoadOrInit")
 	dot_dir, err := repo.discoverDotDir(FileSystemObject(directory))
@@ -43,10 +54,5 @@ func (repo *Repository) LoadOrInit(directory string) error {
 		}
 	}
 	repo.dotDir = dot_dir
-	repo.configHandler.loadConfig()
-	repo.config, err = repo.configHandler.parseConfig()
-	if nil != err {
-		log.Fatal(err)
-	}
 	return nil
 }

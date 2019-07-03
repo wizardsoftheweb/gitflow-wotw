@@ -45,13 +45,13 @@ func EnsureRepoIsAvailable(directory string) (Repository, error) {
 		}
 	} else {
 		headless := IsRepoHeadless()
-		if headless {
-			return repo, ErrHeadlessRepo
+		if !headless {
+			err = EnsureCleanWorkingTree()
+			if nil != err {
+				return repo, err
+			}
 		}
-		err = EnsureCleanWorkingTree()
-		if nil != err {
-			return repo, err
-		}
+
 	}
 	repo.LoadOrInit(directory)
 	return repo, nil
@@ -71,6 +71,9 @@ func CommandInitAction(context *cli.Context) error {
 	repo, err := EnsureRepoIsAvailable(directory)
 	if nil != err {
 		log.Fatal(err)
+	}
+	if context.Bool("default") {
+		logrus.Info("Using default branches")
 	}
 	fmt.Println(repo)
 	return nil

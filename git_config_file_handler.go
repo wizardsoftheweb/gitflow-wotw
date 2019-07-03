@@ -33,6 +33,7 @@ func (handler *ConfigFileHandler) exist() bool {
 
 func (handler *ConfigFileHandler) loadConfig() error {
 	logrus.Trace("loadConfig")
+	logrus.Debug(handler.configFile.String())
 	raw_data, err := ioutil.ReadFile(handler.configFile.String())
 	if nil != err {
 		log.Fatal(err)
