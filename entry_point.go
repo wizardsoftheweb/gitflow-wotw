@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	repo Repository
+	repo    Repository
+	version = "0.0.0"
 )
 
 func BootstrapCli() *cli.App {
