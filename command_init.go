@@ -35,20 +35,14 @@ var (
 func EnsureRepoIsAvailable(directory string) (Repository, error) {
 	var repo Repository
 	var err error
-	result := git.RevParse(RevParseOptions{GitDir: true})
+	result := execute("git", "rev-parse", "--git-dir")
 	if !result.Succeeded() {
-		result = git.Init()
+		result = execute("git", "init")
 		if !result.Succeeded() {
 			return repo, ErrUnableToGitInit
 		}
 	} else {
-		revparse := git.RevParse(
-			RevParseOptions{
-				Quiet:  true,
-				Verify: true,
-			},
-			"HEAD",
-		)
+		revparse := execute("git", "rev-parse", "--quiet", "--verify", "HEAD")
 		if !revparse.Succeeded() {
 			println("rad")
 		}

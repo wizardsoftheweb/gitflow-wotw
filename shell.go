@@ -28,6 +28,16 @@ func parseExitCode(err error) int {
 	return 0
 }
 
+func execute(command ...string) CommandResponse {
+	stdout, stderr, err := RunCommand(command)
+	return CommandResponse{
+		stdout:   stdout,
+		stderr:   stderr,
+		exitCode: parseExitCode(err),
+		exitErr:  err,
+	}
+}
+
 func RunCommand(sanitized_command []string) (string, string, error) {
 	command := exec.Command(sanitized_command[0], sanitized_command[1:]...)
 	stdout, err := command.StdoutPipe()
