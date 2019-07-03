@@ -29,6 +29,8 @@ func CommandInitAction(context *cli.Context) error {
 	if nil != err {
 		log.Fatal(err)
 	}
-	fmt.Println(config.dumpConfig(loadedConfig))
+	for _, line := range config.dumpConfig(loadedConfig) {
+		fmt.Println(line)
+	}
 	return nil
 }
