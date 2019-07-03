@@ -8,9 +8,8 @@ import (
 )
 
 type ConfigFileHandler struct {
-	dotGitDir   FileSystemObject
-	configFile  FileSystemObject
-	rawContents string
+	ConfigStorageHandler
+	configFile FileSystemObject
 }
 
 var (
@@ -39,9 +38,9 @@ func (handler *ConfigFileHandler) loadConfig() error {
 
 func (handler *ConfigFileHandler) parseOptionConfig(raw_config string) (GitConfigOptions, error) {
 	options := make(map[string]string)
-	for _, match := range GitConfigOptionPattern.FindAllStringSubmatch(raw_config, -1) {
+	for _, match := range GitConfigFileOptionPattern.FindAllStringSubmatch(raw_config, -1) {
 		result := map[string]string{}
-		for index, name := range GitConfigOptionPattern.SubexpNames() {
+		for index, name := range GitConfigFileOptionPattern.SubexpNames() {
 			if 0 != index && "" != name {
 				result[name] = match[index]
 			}
@@ -55,9 +54,9 @@ func (handler *ConfigFileHandler) parseOptionConfig(raw_config string) (GitConfi
 
 func (handler *ConfigFileHandler) parseSectionConfig(raw_config string) (GitConfigSection, error) {
 	section := GitConfigSection{}
-	for _, match := range GitConfigSectionPattern.FindAllStringSubmatch(raw_config, -1) {
+	for _, match := range GitConfigFileSectionPattern.FindAllStringSubmatch(raw_config, -1) {
 		result := map[string]string{}
-		for index, name := range GitConfigSectionPattern.SubexpNames() {
+		for index, name := range GitConfigFileSectionPattern.SubexpNames() {
 			if 0 != index && "" != name {
 				result[name] = string(match[index])
 			}
@@ -82,12 +81,12 @@ func (handler *ConfigFileHandler) parseBlockConfig(raw_config string) (GitConfig
 }
 func (handler *ConfigFileHandler) parseConfig() (GitConfig, error) {
 	sections := make(map[string]GitConfigSection)
-	for _, block := range GitConfigBlockPattern.FindAllString(handler.rawContents, -1) {
+	for _, block := range GitConfigFileBlockPattern.FindAllString(handler.rawContents, -1) {
 		section, err := handler.parseBlockConfig(block)
 		if nil != err {
 			log.Fatal(err)
 		}
-		sections[section.Name()] = section
+		sections[section.FileHeader()] = section
 	}
 
 	return GitConfig{
@@ -108,7 +107,7 @@ func (handler *ConfigFileHandler) dumpOption(options GitConfigOptions) []string 
 
 func (handler *ConfigFileHandler) dumpSection(section GitConfigSection) []string {
 	lines := []string{
-		section.Name(),
+		section.FileHeader(),
 	}
 	return append(lines, handler.dumpOption(section.Options)...)
 }

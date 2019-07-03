@@ -12,6 +12,11 @@ var (
 	ErrUnableToProcessCrudRequest = errors.New("Unablet to process your CRUD request")
 )
 
+type ConfigStorageHandler struct {
+	dotGitDir   FileSystemObject
+	rawContents string
+}
+
 type GitConfigCrud int
 
 const (
@@ -29,21 +34,55 @@ type GitConfigSection struct {
 	Options    GitConfigOptions
 }
 
-func FormatGitConfigSectionName(components ...string) string {
+type SectionHeaderFormats int
+
+const (
+	HEADER_WITH_SUBHEADING SectionHeaderFormats = iota
+	HEADER_WITHOUT
+)
+
+var (
+	GitConfigSectionFileHeaderFormats = []string{
+		"[%s \"%s\"]",
+		"[%s]",
+	}
+	GitConfigSectionEnvironmentFormats = []string{
+		"%s.%s",
+		"%s",
+	}
+)
+
+func FormatGitConfigSectionFileName(components ...string) string {
 	if "" == components[0] {
 		return ""
 	}
 	if 1 < len(components) && "" != components[1] {
-		return fmt.Sprintf("[%s \"%s\"]", components[0], components[1])
+		return fmt.Sprintf(GitConfigSectionFileHeaderFormats[HEADER_WITH_SUBHEADING], components[0], components[1])
 	}
-	return fmt.Sprintf("[%s]", components[0])
+	return fmt.Sprintf(GitConfigSectionFileHeaderFormats[HEADER_WITHOUT], components[0])
+}
+func FormatGitConfigSectionEnvironmentName(components ...string) string {
+	if "" == components[0] {
+		return ""
+	}
+	if 1 < len(components) && "" != components[1] {
+		return fmt.Sprintf(GitConfigSectionEnvironmentFormats[HEADER_WITH_SUBHEADING], components[0], components[1])
+	}
+	return fmt.Sprintf(GitConfigSectionEnvironmentFormats[HEADER_WITHOUT], components[0])
 }
 
-func (section *GitConfigSection) Name() string {
+func (section *GitConfigSection) FileHeader() string {
 	if 0 < len(section.Subheading) {
-		return FormatGitConfigSectionName(section.Heading, section.Subheading)
+		return FormatGitConfigSectionFileName(section.Heading, section.Subheading)
 	}
-	return FormatGitConfigSectionName(section.Heading)
+	return FormatGitConfigSectionFileName(section.Heading)
+}
+
+func (section *GitConfigSection) EnvironmentHeader() string {
+	if 0 < len(section.Subheading) {
+		return FormatGitConfigSectionEnvironmentName(section.Heading, section.Subheading)
+	}
+	return FormatGitConfigSectionEnvironmentName(section.Heading)
 }
 
 func (section *GitConfigSection) create(key string, value string) error {
@@ -74,12 +113,12 @@ type GitConfig struct {
 }
 
 func (config *GitConfig) create(new_config GitConfigSection) error {
-	config.Sections[new_config.Name()] = new_config
+	config.Sections[new_config.FileHeader()] = new_config
 	return nil
 }
 
 func (config *GitConfig) read(components ...string) (GitConfigSection, error) {
-	value, ok := config.Sections[FormatGitConfigSectionName(components...)]
+	value, ok := config.Sections[FormatGitConfigSectionFileName(components...)]
 	if !ok {
 		value, ok = config.Sections[components[0]]
 		if !ok {
@@ -103,7 +142,7 @@ func (config *GitConfig) Option(action GitConfigCrud, components ...string) (str
 	var section_name string
 	var key, value int
 	if 4 == len(components) {
-		section_name = FormatGitConfigSectionName(components[0], components[1])
+		section_name = FormatGitConfigSectionFileName(components[0], components[1])
 		key = 2
 		value = 3
 		_, err := config.read(section_name)
@@ -111,16 +150,18 @@ func (config *GitConfig) Option(action GitConfigCrud, components ...string) (str
 			config.create(GitConfigSection{
 				Heading:    components[0],
 				Subheading: components[1],
+				Options:    make(map[string]string),
 			})
 		}
 	} else {
-		section_name = FormatGitConfigSectionName(components[0])
+		section_name = FormatGitConfigSectionFileName(components[0])
 		key = 1
 		value = 2
 		_, err := config.read(section_name)
 		if nil != err {
 			config.create(GitConfigSection{
 				Heading: components[0],
+				Options: make(map[string]string),
 			})
 		}
 	}
