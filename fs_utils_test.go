@@ -28,4 +28,5 @@ func (suite *FsUtilsSuite) TestFileSystemObjectStringReturn(c *C) {
 
 func (suite *FsUtilsSuite) TestFileSystemObjectExists(c *C) {
 	c.Assert(suite.current_file.exists(), Equals, true)
+	c.Assert(suite.dummy_path.exists(), Equals, false)
 }
