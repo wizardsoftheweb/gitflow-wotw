@@ -101,6 +101,20 @@ func EnsureNecessaryInitOptionsAreSet(git_config *format.Config) bool {
 
 }
 
+func (init_options *CommandInitOptions) GenerateBranchSuggestion(gitflow_branch string) string {
+	suggestions, ok = BranchNameSuggestions[gitflow_branch]
+	if !ok {
+		logrus.Warn("%s does not have any suggestions", gitflow_branch)
+		return ""
+	}
+	for _, name := range suggestions {
+		if StringSliceContains(init_options.LocalBranches, name) {
+			return name
+		}
+	}
+	return ""
+}
+
 func (init_options *CommandInitOptions) ConfigureMasterBranch(context *cli.Context, repo_config *config.Config) error {
 	if init_options.HasBeenInitialized && !context.Bool("force") {
 		init_options.FinalMasterValue = GitflowBranchMasterOption.getValueWithDefault(repo_config.Raw, false)
@@ -110,25 +124,18 @@ func (init_options *CommandInitOptions) ConfigureMasterBranch(context *cli.Conte
 			init_options.ShouldCheckExistence = false
 			init_options.DefaultMasterSuggestion = GitflowBranchMasterOption.getValueWithDefault(repo_config.Raw, true)
 		} else {
-			master_branch := PromptForBranchName(prompt_message)
+			init_options.ShouldCheckExistence = true
+			chosen_name := PromptForBranchName(fmt.Sprintf(
+				"Branch for production releases [%s]",
+				GenerateBranchSuggestion(repo, "master"),
+			))
+			if "" == chosen_name {
+				chosen_name := GitflowBranchMasterOption.getValueWithDefault(repo_config.Raw, true)
+			}
+			init_options.FinalMasterValue = chosen_name
 		}
 	}
 	return nil
-}
-
-func GenerateBranchSuggestion(repo *git.Repository, gitflow_branch string) string {
-	suggestions, ok = BranchNameSuggestions[gitflow_branch]
-	if !ok {
-		logrus.Warn("%s does not have any suggestions", gitflow_branch)
-		return ""
-	}
-	for _, name := range suggestions {
-		_, err := repo.Branch(name)
-		if nil == err {
-			return name
-		}
-	}
-	return ""
 }
 
 func GitFlowInit(context *cli.Context) error {

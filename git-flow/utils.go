@@ -15,6 +15,15 @@ func CheckError(err error) {
 	}
 }
 
+func StringSliceContains(haystack []string, needle string) bool {
+	for _, value := range haystack {
+		if value == needle {
+			return true
+		}
+	}
+	return false
+}
+
 func RemoveStringElementFromStringSlice(slice_to_parse []string, element_to_remove string, must_exist ...bool) ([]string, error) {
 	logrus.Debug("RemoveStringElementFromStringSlice")
 	cut_index := 0
