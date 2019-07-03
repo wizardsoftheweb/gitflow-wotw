@@ -16,3 +16,13 @@ var (
 	DefaultGitflowPrefixSupportOption     = GitflowDefaultOptions{"gitflow", "prefix", "support", "support"}
 	DefaultGitflowPrefixVersiontagOption  = GitflowDefaultOptions{"gitflow", "prefix", "versiontag", "v"}
 )
+
+var OptionsToInitializeGitflow = []GitflowDefaultOptions{
+	DefaultGitflowBranchMasterOption,
+	DefaultGitflowBranchDevelopmentOption,
+	DefaultGitflowPrefixFeatureOption,
+	DefaultGitflowPrefixReleaseOption,
+	DefaultGitflowPrefixHotfixOption,
+	DefaultGitflowPrefixSupportOption,
+	DefaultGitflowPrefixVersiontagOption,
+}
