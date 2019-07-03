@@ -1,121 +1,153 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"regexp"
 )
 
-type GitConfigOption struct {
-	Key   string
-	Value string
-}
+var (
+	ErrConfigOptionNotFound       = errors.New("That config option has not been set")
+	ErrConfigSectionNotFound      = errors.New("That config section has not been built")
+	ErrUnableToProcessCrudRequest = errors.New("Unablet to process your CRUD request")
+)
+
+type GitConfigCrud int
+
+const (
+	GIT_CONFIG_CREATE GitConfigCrud = iota
+	GIT_CONFIG_READ
+	GIT_CONFIG_UPDATE
+	GIT_CONFIG_DELETE
+)
+
+type GitConfigOptions map[string]string
 
 type GitConfigSection struct {
 	Heading    string
 	Subheading string
-	Options    []GitConfigOption
+	Options    GitConfigOptions
+}
+
+func FormatGitConfigSectionName(components ...string) string {
+	if "" == components[0] {
+		return ""
+	}
+	if 1 < len(components) && "" != components[1] {
+		return fmt.Sprintf("[%s \"%s\"]", components[0], components[1])
+	}
+	return fmt.Sprintf("[%s]", components[0])
+}
+
+func (section *GitConfigSection) Name() string {
+	if 0 < len(section.Subheading) {
+		return FormatGitConfigSectionName(section.Heading, section.Subheading)
+	}
+	return FormatGitConfigSectionName(section.Heading)
+}
+
+func (section *GitConfigSection) create(key string, value string) error {
+	section.Options[key] = value
+	return nil
+}
+
+func (section *GitConfigSection) read(key string) (string, error) {
+	value, ok := section.Options[key]
+	if !ok {
+		return "", ErrConfigOptionNotFound
+	}
+	return value, nil
+}
+
+func (section *GitConfigSection) update(key string, value string) error {
+	section.Options[key] = value
+	return nil
+}
+
+func (section *GitConfigSection) delete(key string) error {
+	delete(section.Options, key)
+	return nil
 }
 
 type GitConfig struct {
-	Sections []GitConfigSection
+	Sections map[string]GitConfigSection
 }
 
-type ConfigFileHandler struct {
-	dotGitDir   FileSystemObject
-	configFile  FileSystemObject
-	rawContents string
-}
-
-var (
-	GitConfigBlockPattern   = regexp.MustCompile(`(?m)(?:^\[.*?$\s*)(^\s+.*?$\s?)+`)
-	GitConfigSectionPattern = regexp.MustCompile(`\[\s*(?P<heading>.*?)(\s+["'](?P<subheading>.*?)["'])?\s*\]`)
-	GitConfigOptionPattern  = regexp.MustCompile(`\s+(?P<key>.*?)\s*=\s*(?P<value>.*?)\s*`)
-)
-
-func (handler *ConfigFileHandler) createIfDoesNotExist() error {
-	fmt.Println("cool")
+func (config *GitConfig) create(new_config GitConfigSection) error {
+	config.Sections[new_config.Name()] = new_config
 	return nil
 }
 
-func (handler *ConfigFileHandler) exist() bool {
-	return handler.configFile.exists()
+func (config *GitConfig) read(components ...string) (GitConfigSection, error) {
+	value, ok := config.Sections[FormatGitConfigSectionName(components...)]
+	if !ok {
+		value, ok = config.Sections[components[0]]
+		if !ok {
+			return GitConfigSection{}, ErrConfigSectionNotFound
+		}
+	}
+	return value, nil
 }
 
-func (handler *ConfigFileHandler) loadConfig() error {
-	raw_data, err := ioutil.ReadFile(handler.configFile.String())
-	if nil != err {
-		log.Fatal(err)
-	}
-	handler.rawContents = string(raw_data)
+func (config *GitConfig) update(key string, value GitConfigSection) error {
+	config.Sections[key] = value
 	return nil
 }
 
-func (handler *ConfigFileHandler) parseOptionConfig(raw_config string) ([]GitConfigOption, error) {
-	options := []GitConfigOption{}
-	for _, match := range GitConfigOptionPattern.FindAllString(raw_config, -1) {
-		result := map[string]string{}
-		for index, name := range match {
-			result[GitConfigOptionPattern.SubexpNames()[index]] = string(name)
-		}
-		key, ok := result["key"]
-		if !ok {
-			log.Fatal(ok)
-		}
-		value, ok := result["value"]
-		if !ok {
-			log.Fatal(ok)
-		}
-		options = append(options, GitConfigOption{
-			Key:   key,
-			Value: value,
-		})
-	}
-	return options, nil
+func (config *GitConfig) delete(key string) error {
+	delete(config.Sections, key)
+	return nil
 }
 
-func (handler *ConfigFileHandler) parseSectionConfig(raw_config string) (GitConfigSection, error) {
-	section := GitConfigSection{}
-	for _, match := range GitConfigSectionPattern.FindAllString(raw_config, -1) {
-		result := map[string]string{}
-		for index, name := range match {
-			result[GitConfigSectionPattern.SubexpNames()[index]] = string(name)
-		}
-		heading, ok := result["heading"]
-		if !ok {
-			log.Fatal(ok)
-		}
-		subheading, ok := result["subheading"]
-		if !ok {
-			log.Fatal(ok)
-		}
-		section.Heading = heading
-		section.Subheading = subheading
-	}
-	return section, nil
-}
-
-func (handler *ConfigFileHandler) parseBlockConfig(raw_config string) (GitConfigSection, error) {
-	section, err := handler.parseSectionConfig(raw_config)
-	if nil != err {
-		log.Fatal(err)
-	}
-	options, err := handler.parseOptionConfig(raw_config)
-	if nil != err {
-		log.Fatal(err)
-	}
-	section.Options = options
-	return section, nil
-}
-func (handler *ConfigFileHandler) parseConfig() ([]GitConfigSection, error) {
-	sections := []GitConfigSection{}
-	for _, block := range GitConfigBlockPattern.FindAllString(handler.rawContents, -1) {
-		section, err := handler.parseBlockConfig(block)
+func (config *GitConfig) Option(action GitConfigCrud, components ...string) (string, error) {
+	var section_name string
+	var key, value int
+	if 4 == len(components) {
+		section_name = FormatGitConfigSectionName(components[0], components[1])
+		key = 2
+		value = 3
+		_, err := config.read(section_name)
 		if nil != err {
-			log.Fatal(err)
+			config.create(GitConfigSection{
+				Heading:    components[0],
+				Subheading: components[1],
+			})
 		}
-		sections = append(sections, section)
+	} else {
+		section_name = FormatGitConfigSectionName(components[0])
+		key = 1
+		value = 2
+		_, err := config.read(section_name)
+		if nil != err {
+			config.create(GitConfigSection{
+				Heading: components[0],
+			})
+		}
 	}
-	return sections, nil
+	section, err := config.read(section_name)
+	if nil != err {
+		log.Fatal(err)
+	}
+
+	switch {
+	case GIT_CONFIG_CREATE == action && 3 <= len(components):
+		return "", section.create(
+			components[key],
+			components[value],
+		)
+	case GIT_CONFIG_READ == action:
+		return section.read(
+			components[key],
+		)
+	case GIT_CONFIG_UPDATE == action && 3 <= len(components):
+		return "", section.update(
+			components[key],
+			components[value],
+		)
+	case GIT_CONFIG_DELETE == action:
+		return "", section.delete(
+			components[key],
+		)
+	}
+	return "", ErrUnableToProcessCrudRequest
 }
