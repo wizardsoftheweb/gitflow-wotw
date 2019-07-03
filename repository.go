@@ -7,11 +7,10 @@ type Repository struct {
 }
 
 func (repo *Repository) LoadOrInit(directory string) error {
-	repo.dotDir = FileSystemObject(filepath.Join(directory, ".git"))
-	if repo.dotDir.exists() {
-		println("rad")
-	} else {
-		println("git init")
+	var err error
+	repo.dotDir, err = FileSystemObject(filepath.Join(directory, ".git")).ClimbUpwardsToFind(".git")
+	if nil != err {
+		println("Must init")
 	}
 	return nil
 }
