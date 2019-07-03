@@ -9,4 +9,9 @@ import (
 func Test(t *testing.T) { TestingT(t) }
 
 type GitFlowSuite struct {
+	root_path FileSystemObject
+}
+
+func (suite *GitFlowSuite) SetUpSuite(c *C) {
+	suite.root_path = FileSystemObject("/")
 }

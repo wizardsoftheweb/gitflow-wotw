@@ -14,7 +14,7 @@ const (
 )
 
 type FsUtilsSuite struct {
-	root_path           FileSystemObject
+	GitFlowSuite
 	current_file        FileSystemObject
 	dummy_path          FileSystemObject
 	primary_temp_dir    FileSystemObject
@@ -26,7 +26,6 @@ type FsUtilsSuite struct {
 var _ = Suite(&FsUtilsSuite{})
 
 func (suite *FsUtilsSuite) SetUpSuite(c *C) {
-	suite.root_path = FileSystemObject("/")
 	suite.current_file = FileSystemObject(os.Args[0])
 	suite.dummy_path = FileSystemObject(dummy_path)
 	primary_temp_dir, err := ioutil.TempDir("", "")
