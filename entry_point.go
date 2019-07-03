@@ -9,13 +9,14 @@ import (
 )
 
 var (
-	repo    Repository
-	version = "0.0.0"
+	repo            Repository
+	GITFLOW_VERSION = "0.0.0"
 )
 
 func BootstrapCli() *cli.App {
 	app := cli.NewApp()
 	app.Name = "git-flow"
+	app.Version = GITFLOW_VERSION
 	app.Compiled = time.Now()
 	app.Commands = []cli.Command{
 		CommandInit,
