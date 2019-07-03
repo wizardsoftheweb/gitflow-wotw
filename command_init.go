@@ -1,8 +1,7 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"os"
 
 	"github.com/urfave/cli"
 )
@@ -24,20 +23,19 @@ var (
 	}
 )
 
+func EnsureRepoIsAvailable(directory string) Repository {
+	if !DidCommandSucceed([]string{"git", "rev-parse", "--git-dir"}) {
+		println("radical")
+	} else {
+		println("gnarly")
+	}
+	repo := Repository{}
+	return repo
+}
+
 func CommandInitAction(context *cli.Context) error {
-	repo := &Repository{}
-	// directory, _ := os.Getwd()
+	directory, _ := os.Getwd()
+	EnsureRepoIsAvailable(directory)
 	// dot_dir, _ := repo.discoverDotDir(FileSystemObject(directory))
-	fmt.Println(repo.dotDir)
-	config := &ConfigEnvironmentHandler{}
-	// config.configFile = FileSystemObject(filepath.Join(dot_dir.String(), "config"))
-	config.loadConfig()
-	loadedConfig, err := config.parseConfig()
-	if nil != err {
-		log.Fatal(err)
-	}
-	for _, line := range config.dumpConfig(loadedConfig) {
-		fmt.Println(line)
-	}
 	return nil
 }
