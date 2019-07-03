@@ -8,11 +8,8 @@ import (
 )
 
 var (
-	git = &Git{}
-)
-
-var (
 	ErrUnableToGitInit = errors.New("Unable to complete git init in the current working directory")
+	ErrHeadlessRepo    = errors.New("Unable to initialize in a bare repo")
 )
 
 var (
@@ -42,19 +39,21 @@ func EnsureRepoIsAvailable(directory string) (Repository, error) {
 			return repo, ErrUnableToGitInit
 		}
 	} else {
-		revparse := execute("git", "rev-parse", "--quiet", "--verify", "HEAD")
-		if !revparse.Succeeded() {
-			println("rad")
+		headless := IsRepoHeadless()
+		if headless {
+			return repo, ErrHeadlessRepo
 		}
-
+		err = EnsureCleanWorkingTree()
+		if nil != err {
+			return repo, err
+		}
 	}
-	parseExitCode(err)
+	repo.LoadOrInit(directory)
 	return repo, nil
 }
 
 func CommandInitAction(context *cli.Context) error {
 	directory, _ := os.Getwd()
-	EnsureRepoIsAvailable(directory)
-	// dot_dir, _ := repo.discoverDotDir(FileSystemObject(directory))
+	repo := EnsureRepoIsAvailable(directory)
 	return nil
 }

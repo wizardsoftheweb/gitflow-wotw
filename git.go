@@ -1,46 +1,33 @@
 package main
 
-type Git struct {
+import "errors"
+
+var (
+	ErrUnstagedChanges  = errors.New("There are unstaged changes in your working directory")
+	ErrIndexUncommitted = errors.New("There are uncommitted changes in your index")
+)
+
+func IsRepoHeadless() bool {
+	revparse := execute("git", "rev-parse", "--quiet", "--verify", "HEAD")
+	return !revparse.Succeeded()
 }
 
-type GitOptions struct{}
-
-func (git *Git) execute(command ...string) CommandResponse {
-	if "git" != command[0] {
-		command = append([]string{"git"}, command...)
-	}
-	stdout, stderr, err := RunCommand(command)
-	return CommandResponse{
-		stdout:   stdout,
-		stderr:   stderr,
-		exitCode: parseExitCode(err),
-		exitErr:  err,
-	}
+func IsWorkingTreeClean() bool {
+	cleanliness := execute("git", "diff", "--no-ext-diff", "--ignore-submodules", "--quiet", "--exit-code")
+	return cleanliness.Succeeded()
 }
 
-func (git *Git) Init() CommandResponse {
-	return git.execute("init")
+func IsIndexClean() bool {
+	cleanliness := execute("git", "diff-index", "--cached", "--quiet", "--ignore-submodules", "HEAD")
+	return cleanliness.Succeeded()
 }
 
-type RevParseOptions struct {
-	GitOptions
-	GitDir bool
-	Verify bool
-	Quiet  bool
-}
-
-func (git *Git) RevParse(options RevParseOptions, arguments ...string) CommandResponse {
-	command := []string{
-		"rev-parse",
+func EnsureCleanWorkingTree() error {
+	if !IsWorkingTreeClean() {
+		return ErrUnstagedChanges
 	}
-	if options.GitDir {
-		command = append(command, "--git-dir")
+	if !IsIndexClean() {
+		return ErrIndexUncommitted
 	}
-	if options.Verify {
-		command = append(command, "--verify")
-	}
-	if options.Quiet {
-		command = append(command, "--quiet")
-	}
-	return git.execute(append(command, arguments...)...)
+	return nil
 }

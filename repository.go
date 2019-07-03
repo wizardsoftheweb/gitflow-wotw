@@ -30,13 +30,10 @@ func (repo *Repository) LoadOrInit(directory string) error {
 	dot_dir, err := repo.discoverDotDir(FileSystemObject(directory))
 	if nil != err {
 		if ErrNotARepo == err {
-			println("must init")
+			execute("git", "init")
 		} else {
-			println("rad")
 			return err
 		}
-	} else {
-		println("cool")
 	}
 	repo.dotDir = dot_dir
 	return nil
