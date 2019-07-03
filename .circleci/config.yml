@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  test:
+  build:
     docker:
       - image: circleci/golang:1.12
     working_directory: /go/src/github.com/thecjharries/gitflow-wotw-go
