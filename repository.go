@@ -32,6 +32,7 @@ func (repo *Repository) LoadOrInit(directory string) error {
 		if ErrNotARepo == err {
 			println("must init")
 		} else {
+			println("rad")
 			return err
 		}
 	} else {

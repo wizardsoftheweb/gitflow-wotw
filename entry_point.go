@@ -11,6 +11,6 @@ var (
 func main() {
 	cwd, _ := os.Getwd()
 	repo.LoadOrInit(cwd)
-	path := FileSystemObject(cwd)
-	path.SearchDirectoryAbove("go-git2")
+	// path := FileSystemObject(cwd)
+	// path.SearchDirectoryAbove("go-git2")
 }
