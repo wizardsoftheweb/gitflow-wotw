@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 
 	. "gopkg.in/check.v1"
 )
@@ -54,8 +55,32 @@ func (suite *FsUtilsSuite) TearDownSuite(c *C) {
 	os.RemoveAll(suite.primary_temp_dir.String())
 }
 
-func (suite *FsUtilsSuite) TestFileSystemObjectStringReturn(c *C) {
+func (suite *FsUtilsSuite) TestFileSystemObjectSimpleReturns(c *C) {
 	c.Assert(suite.dummy_path.String(), Equals, dummy_path)
+	c.Assert(suite.dummy_path.Base(), Equals, filepath.Base(dummy_path))
+	c.Assert(suite.dummy_path.Parent(), Equals, FileSystemObject(filepath.Dir(dummy_path)))
+	c.Assert(suite.dummy_path.isRoot(), Equals, false)
+	c.Assert(suite.root_path.isRoot(), Equals, true)
+}
+
+func (suite *FsUtilsSuite) TestFileSystemObjectModeReturns(c *C) {
+	c.Assert(suite.dummy_path.isFileOrDir(), Equals, FILE_MODE_ERROR)
+	c.Assert(suite.dummy_path.IsDir(), Equals, false)
+	c.Assert(suite.dummy_path.IsFile(), Equals, false)
+	c.Assert(suite.primary_temp_dir.isFileOrDir(), Equals, FILE_MODE_DIRECTORY)
+	c.Assert(suite.primary_temp_dir.IsDir(), Equals, true)
+	c.Assert(suite.primary_temp_dir.IsFile(), Equals, false)
+	c.Assert(suite.primary_temp_file.isFileOrDir(), Equals, FILE_MODE_FILE)
+	c.Assert(suite.primary_temp_file.IsDir(), Equals, false)
+	c.Assert(suite.primary_temp_file.IsFile(), Equals, true)
+}
+
+func (suite *FsUtilsSuite) TestFileSystemObjectDirectoryContains(c *C) {
+	result, err := suite.primary_temp_file.DirectoryContains("test")
+	c.Assert(err, ErrorMatches, ErrNotADirectory.Error())
+	result, err = suite.primary_temp_dir.DirectoryContains(suite.primary_temp_file.Base())
+	c.Assert(err, IsNil)
+	c.Assert(result, Equals, true)
 }
 
 func (suite *FsUtilsSuite) TestFileSystemObjectExists(c *C) {
