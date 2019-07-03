@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -21,6 +22,7 @@ var (
 )
 
 func CommandVersionAction(context *cli.Context) error {
+	logrus.Trace("CommandVersionAction")
 	fmt.Fprintf(
 		context.App.Writer,
 		"Version %s of gitflow-wotw was based on the following work:\n\tPackage: %s\n\tVersion: %s\n\tUrl: %s",

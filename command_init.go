@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -33,6 +34,7 @@ var (
 )
 
 func EnsureRepoIsAvailable(directory string) (Repository, error) {
+	logrus.Trace("EnsureRepoIsAvailable")
 	var repo Repository
 	var err error
 	result := execute("git", "rev-parse", "--git-dir")
@@ -43,19 +45,20 @@ func EnsureRepoIsAvailable(directory string) (Repository, error) {
 		}
 	} else {
 		headless := IsRepoHeadless()
-		if headless {
-			return repo, ErrHeadlessRepo
+		if !headless {
+			err = EnsureCleanWorkingTree()
+			if nil != err {
+				return repo, err
+			}
 		}
-		err = EnsureCleanWorkingTree()
-		if nil != err {
-			return repo, err
-		}
+
 	}
 	repo.LoadOrInit(directory)
 	return repo, nil
 }
 
 func CheckInitialization(context *cli.Context, repo Repository) error {
+	logrus.Trace("CheckInitialization")
 	if IsGitflowInitialized(repo.config) && context.Bool("force") {
 		return ErrAlreadyInitialized
 	}
@@ -63,10 +66,14 @@ func CheckInitialization(context *cli.Context, repo Repository) error {
 }
 
 func CommandInitAction(context *cli.Context) error {
+	logrus.Trace("CommandInitAction")
 	directory, _ := os.Getwd()
 	repo, err := EnsureRepoIsAvailable(directory)
 	if nil != err {
 		log.Fatal(err)
+	}
+	if context.Bool("default") {
+		logrus.Info("Using default branches")
 	}
 	fmt.Println(repo)
 	return nil
