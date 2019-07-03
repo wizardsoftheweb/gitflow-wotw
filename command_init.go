@@ -1,9 +1,18 @@
 package main
 
 import (
+	"errors"
 	"os"
 
 	"github.com/urfave/cli"
+)
+
+var (
+	git = &Git{}
+)
+
+var (
+	ErrUnableToGitInit = errors.New("Unable to complete git init in the current working directory")
 )
 
 var (
@@ -23,15 +32,30 @@ var (
 	}
 )
 
-func EnsureRepoIsAvailable(directory string) Repository {
+func EnsureRepoIsAvailable(directory string) (Repository, error) {
+	var repo Repository
 	var err error
-	if !DidCommandSucceed([]string{"git", "rev-parse", "--git-dir"}) {
-		_, _, err = executeCommand([]string{"git", "init"})
+	result := git.RevParse(RevParseOptions{GitDir: true})
+	if !result.Succeeded() {
+		result = git.Init()
+		if !result.Succeeded() {
+			return repo, ErrUnableToGitInit
+		}
 	} else {
-		println("gnarly")
+		revparse := git.RevParse(
+			RevParseOptions{
+				Quiet:  true,
+				Verify: true,
+			},
+			"HEAD",
+		)
+		if !revparse.Succeeded() {
+			println("rad")
+		}
+
 	}
-	repo := Repository{}
-	return repo
+	parseExitCode(err)
+	return repo, nil
 }
 
 func CommandInitAction(context *cli.Context) error {

@@ -3,9 +3,12 @@ package main
 type Git struct {
 }
 
-type GitCommandOptions struct{}
+type GitOptions struct{}
 
 func (git *Git) execute(command ...string) CommandResponse {
+	if "git" != command[0] {
+		command = append([]string{"git"}, command...)
+	}
 	stdout, stderr, err := RunCommand(command)
 	return CommandResponse{
 		stdout:   stdout,
@@ -15,18 +18,29 @@ func (git *Git) execute(command ...string) CommandResponse {
 	}
 }
 
-type RevParseOptions struct {
-	GitCommandOptions
-	GitDir bool
+func (git *Git) Init() CommandResponse {
+	return git.execute("init")
 }
 
-func (git *Git) RevParse(options RevParseOptions) CommandResponse {
+type RevParseOptions struct {
+	GitOptions
+	GitDir bool
+	Verify bool
+	Quiet  bool
+}
+
+func (git *Git) RevParse(options RevParseOptions, arguments ...string) CommandResponse {
 	command := []string{
-		"git",
 		"rev-parse",
 	}
 	if options.GitDir {
 		command = append(command, "--git-dir")
 	}
-	return git.execute(command)
+	if options.Verify {
+		command = append(command, "--verify")
+	}
+	if options.Quiet {
+		command = append(command, "--quiet")
+	}
+	return git.execute(append(command, arguments...)...)
 }
