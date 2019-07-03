@@ -13,4 +13,4 @@ jobs:
       - run: go get github.com/sirupsen/logrus
       - run: go get github.com/urfave/cli
       - run: go test -v -cover -race -coverprofile=/tmp/cov/coverage.out
-      - run: /home/ubuntu/.go_workspace/bin/goveralls -coverprofile=/tmp/cov/coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
+      - run: goveralls -coverprofile=/tmp/cov/coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
