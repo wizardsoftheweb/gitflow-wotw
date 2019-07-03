@@ -2,14 +2,17 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	"log"
 	"os"
 
 	"github.com/urfave/cli"
 )
 
 var (
-	ErrUnableToGitInit = errors.New("Unable to complete git init in the current working directory")
-	ErrHeadlessRepo    = errors.New("Unable to initialize in a bare repo")
+	ErrUnableToGitInit    = errors.New("Unable to complete git init in the current working directory")
+	ErrHeadlessRepo       = errors.New("Unable to initialize in a bare repo")
+	ErrAlreadyInitialized = errors.New("The repo is already initialized; try again with -f")
 )
 
 var (
@@ -52,8 +55,19 @@ func EnsureRepoIsAvailable(directory string) (Repository, error) {
 	return repo, nil
 }
 
+func CheckInitialization(context *cli.Context, repo Repository) error {
+	if IsGitflowInitialized(repo.config) && context.Bool("force") {
+		return ErrAlreadyInitialized
+	}
+	return nil
+}
+
 func CommandInitAction(context *cli.Context) error {
 	directory, _ := os.Getwd()
-	repo := EnsureRepoIsAvailable(directory)
+	repo, err := EnsureRepoIsAvailable(directory)
+	if nil != err {
+		log.Fatal(err)
+	}
+	fmt.Println(repo)
 	return nil
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"log"
 	"path/filepath"
 )
 
@@ -10,7 +11,9 @@ var (
 )
 
 type Repository struct {
-	dotDir FileSystemObject
+	dotDir        FileSystemObject
+	configHandler ConfigFileHandler
+	config        GitConfig
 }
 
 func (repo Repository) discoverDotDir(root FileSystemObject) (FileSystemObject, error) {
@@ -36,5 +39,10 @@ func (repo *Repository) LoadOrInit(directory string) error {
 		}
 	}
 	repo.dotDir = dot_dir
+	repo.configHandler.loadConfig()
+	repo.config, err = repo.configHandler.parseConfig()
+	if nil != err {
+		log.Fatal(err)
+	}
 	return nil
 }
