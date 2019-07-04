@@ -71,12 +71,13 @@ func EnsureRepoIsAvailable(directory string) (Repository, error) {
 	return repo, nil
 }
 
-func CheckInitialization(context *cli.Context, repo *Repository) error {
+func CheckInitialization(context *cli.Context, repo *Repository, branch string) string {
 	logrus.Trace("CheckInitialization")
-	if IsGitflowInitialized(repo) && context.Bool("force") {
-		return ErrAlreadyInitialized
+	if repo.HasBranchBeenConfigured(branch) && !context.Bool("force") {
+		value, _ := repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "master")
+		return value
 	}
-	return nil
+	return ""
 }
 
 func CheckIfABranchSuggestionExists(suggestions []string, branches []string) string {
@@ -90,7 +91,7 @@ func CheckIfABranchSuggestionExists(suggestions []string, branches []string) str
 	return suggestions[0]
 }
 
-func ConstructBranchNameSuggestions(context *cli.Context, repo Repository) error {
+func ConstructMasterBranchNameSuggestions(context *cli.Context, repo Repository) error {
 	if 0 == len(repo.localBranches) {
 		logrus.Info("No branches exist; creating now")
 		ActiveCommandInitState.MasterExistenceCheck = false
@@ -120,7 +121,7 @@ func BuildMasterBranch(context *cli.Context, repo *Repository) error {
 	master := PromptForBranchName(
 		fmt.Sprintf("Branch name for prod [%s]", ActiveCommandInitState.MasterDefaultSuggestion),
 	)
-	repo.config.Option(GIT_CONFIG_UPDATE, "gitflow", "branch", "master")
+	repo.config.Option(GIT_CONFIG_UPDATE, "gitflow", "branch", "master", master)
 	if ActiveCommandInitState.MasterExistenceCheck {
 		if !repo.DoesBranchExistLocally(master) {
 			remoteMaster := fmt.Sprintf("origin/%s", master)
@@ -129,6 +130,50 @@ func BuildMasterBranch(context *cli.Context, repo *Repository) error {
 			}
 		} else {
 			logrus.Warning(fmt.Sprintf("The chosen master branch %s does not exist locally", master))
+		}
+	}
+	return nil
+}
+
+func ConstructDevBranchNameSuggestions(context *cli.Context, repo Repository) error {
+	if 0 == len(repo.localBranches) {
+		logrus.Info("No branches exist; creating now")
+		ActiveCommandInitState.DevExistenceCheck = false
+		value, err := repo.config.Option(
+			GIT_CONFIG_READ,
+			"gitflow",
+			"branch",
+			"dev",
+		)
+		if nil != err {
+			logrus.Fatal(err)
+		}
+		if "" != value {
+			ActiveCommandInitState.DevDefaultSuggestion = value
+		} else {
+			ActiveCommandInitState.DevDefaultSuggestion = DefaultGitflowBranchDevelopmentOption.Value
+		}
+	} else {
+		logrus.Info("What branch should be used for development releases?")
+		ActiveCommandInitState.DevExistenceCheck = true
+		ActiveCommandInitState.DevDefaultSuggestion = CheckIfABranchSuggestionExists(DefaultDevBranchGuesses, repo.localBranches)
+	}
+	return nil
+}
+
+func BuildDevBranch(context *cli.Context, repo *Repository) error {
+	dev := PromptForBranchName(
+		fmt.Sprintf("Branch name for dev [%s]", ActiveCommandInitState.DevDefaultSuggestion),
+	)
+	repo.config.Option(GIT_CONFIG_UPDATE, "gitflow", "branch", "dev", dev)
+	if ActiveCommandInitState.DevExistenceCheck {
+		if !repo.DoesBranchExistLocally(dev) {
+			devMaster := fmt.Sprintf("origin/%s", dev)
+			if repo.DoesBranchExistRemotely(devMaster) {
+				execute("git", "branch", dev, devMaster)
+			}
+		} else {
+			logrus.Warning(fmt.Sprintf("The chosen dev branch %s does not exist locally", dev))
 		}
 	}
 	return nil
@@ -151,8 +196,15 @@ func CommandInitAction(context *cli.Context) error {
 		logrus.Info("Using default branches")
 	}
 	repo.LoadLocalBranches()
-	CheckInitialization(context, &repo)
-	ConstructBranchNameSuggestions(context, repo)
-	BuildMasterBranch(context, repo)
+	master := CheckInitialization(context, &repo, "master")
+	if "" == master {
+		ConstructMasterBranchNameSuggestions(context, repo)
+		BuildMasterBranch(context, &repo)
+	}
+	dev := CheckInitialization(context, &repo, "dev")
+	if "" == dev {
+		ConstructDevBranchNameSuggestions(context, repo)
+		BuildDevBranch(context, &repo)
+	}
 	return nil
 }
