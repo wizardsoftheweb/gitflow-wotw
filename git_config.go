@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -57,10 +58,11 @@ type GitConfig struct {
 }
 
 func GenerateOptionName(arguments ...string) string {
+	logrus.Trace("GenerateOptionName")
 	args := fmt.Sprintf("%s", arguments)
 	name, ok := OptionKeyCache[args]
 	if !ok {
-		name := strings.Join(arguments, ".")
+		name = strings.Join(arguments, ".")
 		OptionKeyCache[args] = name
 	}
 	return name
@@ -97,17 +99,33 @@ func (config *GitConfig) delete(arguments ...string) (string, error) {
 }
 
 func (config *GitConfig) Option(action GitConfigCrud, arguments ...string) (string, error) {
+	logrus.Trace("Option")
 	switch action {
 	case GIT_CONFIG_CREATE:
+		logrus.Debug(fmt.Sprintf("%s: %s", "create", arguments))
 		return config.create(arguments...)
 	case GIT_CONFIG_READ:
+		logrus.Debug(fmt.Sprintf("%s: %s", "read", arguments))
 		return config.read(arguments...)
 	case GIT_CONFIG_UPDATE:
+		logrus.Debug(fmt.Sprintf("%s: %s", "update", arguments))
 		return config.update(arguments...)
 	case GIT_CONFIG_DELETE:
+		logrus.Debug(fmt.Sprintf("%s: %s", "delete", arguments))
 		return config.delete(arguments...)
 	}
 	return "", nil
+}
+
+func (config *GitConfig) SortKeys() []string {
+	keys := make([]string, len(config.Options))
+	index := 0
+	for key, _ := range config.Options {
+		keys[index] = key
+		index++
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 type SectionHeaderFormats int

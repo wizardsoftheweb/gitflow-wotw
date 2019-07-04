@@ -42,9 +42,8 @@ func (handler *ConfigFileHandler) loadConfig() error {
 	return nil
 }
 
-func (handler *ConfigFileHandler) parseOptionConfig(raw_config string) (GitConfigOptions, error) {
+func (handler *ConfigFileHandler) parseOptionConfig(config *GitConfig, section []string, raw_config string) (*GitConfig, error) {
 	logrus.Trace("parseOptionConfig")
-	options := make(map[string]string)
 	for _, match := range GitConfigFileOptionPattern.FindAllStringSubmatch(raw_config, -1) {
 		result := map[string]string{}
 		for index, name := range GitConfigFileOptionPattern.SubexpNames() {
@@ -52,16 +51,17 @@ func (handler *ConfigFileHandler) parseOptionConfig(raw_config string) (GitConfi
 				result[name] = match[index]
 			}
 		}
-		key := result["key"]
-		value := result["value"]
-		options[key] = value
+		config.Option(
+			GIT_CONFIG_CREATE,
+			append(section, []string{result["key"], result["value"]}...)...,
+		)
 	}
-	return options, nil
+	return config, nil
 }
 
-func (handler *ConfigFileHandler) parseSectionConfig(raw_config string) (GitConfigSection, error) {
+func (handler *ConfigFileHandler) parseSectionConfig(raw_config string) ([]string, error) {
 	logrus.Trace("parseSectionConfig")
-	section := GitConfigSection{}
+	section := []string{}
 	for _, match := range GitConfigFileSectionPattern.FindAllStringSubmatch(raw_config, -1) {
 		result := map[string]string{}
 		for index, name := range GitConfigFileSectionPattern.SubexpNames() {
@@ -69,66 +69,64 @@ func (handler *ConfigFileHandler) parseSectionConfig(raw_config string) (GitConf
 				result[name] = string(match[index])
 			}
 		}
-		section.Heading = result["heading"]
-		section.Subheading = result["subheading"]
+		returnValue := []string{result["heading"]}
+		if "" != result["subheading"] {
+			return append(returnValue, result["subheading"]), nil
+		}
+		return returnValue, nil
 	}
 	return section, nil
 }
 
-func (handler *ConfigFileHandler) parseBlockConfig(raw_config string) (GitConfigSection, error) {
+func (handler *ConfigFileHandler) parseBlockConfig(config *GitConfig, raw_config string) (*GitConfig, error) {
 	logrus.Trace("parseBlockConfig")
 	section, err := handler.parseSectionConfig(raw_config)
 	if nil != err {
 		log.Fatal(err)
 	}
-	options, err := handler.parseOptionConfig(raw_config)
+	update_config, err := handler.parseOptionConfig(config, section, raw_config)
 	if nil != err {
 		log.Fatal(err)
 	}
-	section.Options = options
-	return section, nil
+	return update_config, nil
 }
-func (handler *ConfigFileHandler) parseConfig() (GitConfig, error) {
+func (handler *ConfigFileHandler) parseConfig() (*GitConfig, error) {
 	logrus.Trace("parseConfig")
-	sections := make(map[string]GitConfigSection)
+	config := &GitConfig{
+		Options: make(map[string]*GitOption),
+	}
 	for _, block := range GitConfigFileBlockPattern.FindAllString(handler.rawContents, -1) {
-		section, err := handler.parseBlockConfig(block)
+		result, err := handler.parseBlockConfig(config, block)
 		if nil != err {
 			log.Fatal(err)
 		}
-		sections[section.FileHeader()] = section
+		config = result
 	}
 
-	return GitConfig{
-		Sections: sections,
-	}, nil
+	return config, nil
 }
 
-func (handler *ConfigFileHandler) dumpOption(options GitConfigOptions) []string {
-	logrus.Trace("dumpOption")
-	lines := []string{}
-	for key, value := range options {
-		lines = append(
-			lines,
-			fmt.Sprintf("\t%s = %s", key, value),
-		)
-	}
-	return lines
-}
-
-func (handler *ConfigFileHandler) dumpSection(section GitConfigSection) []string {
-	logrus.Trace("dumpSection")
-	lines := []string{
-		section.FileHeader(),
-	}
-	return append(lines, handler.dumpOption(section.Options)...)
-}
-
-func (handler *ConfigFileHandler) dumpConfig(config GitConfig) []string {
+func (handler *ConfigFileHandler) dumpConfig(config *GitConfig) []string {
 	logrus.Trace("dumpConfig")
 	lines := []string{}
-	for _, section := range config.Sections {
-		lines = append(lines, handler.dumpSection(section)...)
+	currentSection := ""
+	oldSection := "qqq"
+	for _, key := range config.SortKeys() {
+		option, _ := config.Options[key]
+		logrus.Debug(fmt.Sprintf("%s: %s", key, option))
+		if "" != option.Subsection {
+			currentSection = FormatGitConfigSectionFileName(option.Section, option.Subsection)
+		} else {
+			currentSection = FormatGitConfigSectionFileName(option.Section)
+		}
+		if oldSection != currentSection {
+			lines = append(lines, currentSection)
+			oldSection = currentSection
+		}
+		lines = append(
+			lines,
+			fmt.Sprintf("\t%s = %s", option.Key, option.Value),
+		)
 	}
 	return lines
 }
