@@ -7,5 +7,7 @@ var (
 	ErrUnstagedChanges    = errors.New("There are unstaged changes in your working directory")
 	ErrIndexUncommitted   = errors.New("There are uncommitted changes in your index")
 	ErrHeadlessRepo       = errors.New("Unable to initialize in a bare repo")
-	ErrProdDoesntExist    = errors.New("The production branch does not exist")
+	ErrProdDoesntExist    = errors.New("The branch you have selected does not exist")
+
+	ErrProductionMustDifferFromDevelopment = errors.New("The production branch must differ from the development branch")
 )

@@ -54,9 +54,9 @@ func (r *Repository) PickGoodMasterSuggestion() string {
 	}
 	return DefaultBranchMaster.Value
 }
-func (r *Repository) PickGoodDevSuggestion() string {
+func (r *Repository) PickGoodDevSuggestion(newMaster string) string {
 	for _, suggestion := range DefaultDevSuggestions {
-		if r.HasLocalBranch(suggestion) {
+		if suggestion != newMaster && r.HasLocalBranch(suggestion) {
 			return suggestion
 		}
 	}
