@@ -25,6 +25,9 @@ func InitProcedural(context *cli.Context) error {
 			logrus.Fatal(ErrHeadlessRepo)
 		}
 	}
+	if IsGitFlowInitialized() && !context.Bool("force") {
+		logrus.Fatal(ErrAlreadyInitialized)
+	}
 	return nil
 }
 

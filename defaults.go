@@ -1,18 +1,28 @@
 package main
 
+const (
+	MASTER_BRANCH_KEY  = "gitflow.branch.master"
+	DEV_BRANCH_KEY     = "gitflow.branches.development"
+	FEATURE_PREFIX_KEY = "gitflow.prefix.feature"
+	RELEASE_PREFIX_KEY = "gitflow.prefix.release"
+	HOTFIX_PREFIX_KEY  = "gitflow.prefix.hotfix"
+	SUPPORT_PREFIX_KEY = "gitflow.prefix.support"
+	VERSIONTAG_KEY     = "gitflow.prefix.versiontag"
+)
+
 type Option struct {
 	Key   string
 	Value string
 }
 
 var (
-	DefaultBranchMaster      = Option{"gitflow.branches.master", "master"}
-	DefaultBranchDevelopment = Option{"gitflow.branches.development", "dev"}
-	DefaultPrefixFeature     = Option{"gitflow.prefix.feature", "feature"}
-	DefaultPrefixRelease     = Option{"gitflow.prefix.release", "release"}
-	DefaultPrefixHotfix      = Option{"gitflow.prefix.hotfix", "hotfix"}
-	DefaultPrefixSupport     = Option{"gitflow.prefix.support", "support"}
-	DefaultPrefixVersiontag  = Option{"gitflow.prefix.versiontag", "v"}
+	DefaultBranchMaster      = Option{MASTER_BRANCH_KEY, "master"}
+	DefaultBranchDevelopment = Option{DEV_BRANCH_KEY, "dev"}
+	DefaultPrefixFeature     = Option{FEATURE_PREFIX_KEY, "feature"}
+	DefaultPrefixRelease     = Option{RELEASE_PREFIX_KEY, "release"}
+	DefaultPrefixHotfix      = Option{HOTFIX_PREFIX_KEY, "hotfix"}
+	DefaultPrefixSupport     = Option{SUPPORT_PREFIX_KEY, "support"}
+	DefaultPrefixVersiontag  = Option{VERSIONTAG_KEY, "v"}
 )
 
 var (
