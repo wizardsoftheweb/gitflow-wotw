@@ -187,6 +187,10 @@ func EnsureDevAndMasterDiffer(dev string, master string) error {
 	return nil
 }
 
+func EnsureHeadExists(context *cli.Context, repo *Repository) error {
+
+}
+
 func CommandInitAction(context *cli.Context) error {
 	logrus.Trace("CommandInitAction")
 	ActiveCommandInitState = CommandInitState{
