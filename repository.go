@@ -130,3 +130,17 @@ func (repo *Repository) DoesBranchExistRemotely(needle string) bool {
 	}
 	return false
 }
+
+func (repo *Repository) HavePrefixedAllBeenConfigured() bool {
+	logrus.Trace("HavePrefixedAllBeenConfigured")
+	for _, option := range OptionsToInitializeGitflow {
+		if "prefix" != option.Subsection {
+			continue
+		}
+		value, err := repo.config.Option(GIT_CONFIG_READ, option.Section, option.Subsection, option.Key)
+		if "" == value {
+			return false
+		}
+	}
+	return true
+}
