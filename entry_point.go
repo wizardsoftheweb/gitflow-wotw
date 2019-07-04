@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -72,6 +73,12 @@ func BootstrapCli(verbosity_level int) *cli.App {
 	}
 	app.Before = PopulateContext
 	return app
+}
+
+func CheckError(err error) {
+	if nil != err {
+		logrus.Fatal(err)
+	}
 }
 
 // func main() {
