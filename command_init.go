@@ -20,9 +20,10 @@ type CommandInitState struct {
 var ActiveCommandInitState CommandInitState
 
 var (
-	ErrUnableToGitInit    = errors.New("Unable to complete git init in the current working directory")
-	ErrHeadlessRepo       = errors.New("Unable to initialize in a bare repo")
-	ErrAlreadyInitialized = errors.New("The repo is already initialized; try again with -f")
+	ErrUnableToGitInit                     = errors.New("Unable to complete git init in the current working directory")
+	ErrHeadlessRepo                        = errors.New("Unable to initialize in a bare repo")
+	ErrAlreadyInitialized                  = errors.New("The repo is already initialized; try again with -f")
+	ErrProductionMustDifferFromDevelopment = errors.New("The production branch must differ from the development branch")
 )
 
 var (
@@ -117,7 +118,7 @@ func ConstructMasterBranchNameSuggestions(context *cli.Context, repo Repository)
 	return nil
 }
 
-func BuildMasterBranch(context *cli.Context, repo *Repository) error {
+func BuildMasterBranch(context *cli.Context, repo *Repository) string {
 	master := PromptForBranchName(
 		fmt.Sprintf("Branch name for prod [%s]", ActiveCommandInitState.MasterDefaultSuggestion),
 	)
@@ -132,7 +133,7 @@ func BuildMasterBranch(context *cli.Context, repo *Repository) error {
 			logrus.Warning(fmt.Sprintf("The chosen master branch %s does not exist locally", master))
 		}
 	}
-	return nil
+	return master
 }
 
 func ConstructDevBranchNameSuggestions(context *cli.Context, repo Repository) error {
@@ -161,7 +162,7 @@ func ConstructDevBranchNameSuggestions(context *cli.Context, repo Repository) er
 	return nil
 }
 
-func BuildDevBranch(context *cli.Context, repo *Repository) error {
+func BuildDevBranch(context *cli.Context, repo *Repository) string {
 	dev := PromptForBranchName(
 		fmt.Sprintf("Branch name for dev [%s]", ActiveCommandInitState.DevDefaultSuggestion),
 	)
@@ -175,6 +176,13 @@ func BuildDevBranch(context *cli.Context, repo *Repository) error {
 		} else {
 			logrus.Warning(fmt.Sprintf("The chosen dev branch %s does not exist locally", dev))
 		}
+	}
+	return dev
+}
+
+func EnsureDevAndMasterDiffer(dev string, master string) error {
+	if dev == master {
+		return ErrProductionMustDifferFromDevelopment
 	}
 	return nil
 }
@@ -198,13 +206,25 @@ func CommandInitAction(context *cli.Context) error {
 	repo.LoadLocalBranches()
 	master := CheckInitialization(context, &repo, "master")
 	if "" == master {
-		ConstructMasterBranchNameSuggestions(context, repo)
-		BuildMasterBranch(context, &repo)
+		if context.Bool("default") {
+			master = DefaultGitflowBranchMasterOption.Value
+		} else {
+			ConstructMasterBranchNameSuggestions(context, repo)
+			master = BuildMasterBranch(context, &repo)
+		}
 	}
 	dev := CheckInitialization(context, &repo, "dev")
 	if "" == dev {
-		ConstructDevBranchNameSuggestions(context, repo)
-		BuildDevBranch(context, &repo)
+		if context.Bool("default") {
+			dev = DefaultGitflowBranchDevelopmentOption.Value
+		} else {
+			ConstructDevBranchNameSuggestions(context, repo)
+			dev = BuildDevBranch(context, &repo)
+		}
+	}
+	err = EnsureDevAndMasterDiffer(dev, master)
+	if nil != err {
+		log.Fatal(err)
 	}
 	return nil
 }
