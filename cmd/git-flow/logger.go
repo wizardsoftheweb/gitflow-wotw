@@ -1,4 +1,4 @@
-package main
+package gitflow
 
 import (
 	"github.com/sirupsen/logrus"
@@ -10,6 +10,8 @@ func BootstrapLogger(verbosity_level int) {
 		FullTimestamp:    true,
 		TimestampFormat:  "2006-01-02 15:04:05",
 		QuoteEmptyFields: true,
+		ForceFormatting:  true,
+		ForceColors:      true,
 	}
 	formatter.SetColorScheme(&prefixed.ColorScheme{
 		PrefixStyle:     "cyan",
@@ -39,10 +41,11 @@ func BootstrapLogger(verbosity_level int) {
 		logrus.SetLevel(logrus.InfoLevel)
 		break
 	case 3 == verbosity_level:
-		logrus.SetLevel(logrus.DebugLevel)
-		break
-	default:
 		logrus.SetLevel(logrus.TraceLevel)
 		break
+	default:
+		logrus.SetLevel(logrus.DebugLevel)
+		break
 	}
+	logrus.GetLevel()
 }

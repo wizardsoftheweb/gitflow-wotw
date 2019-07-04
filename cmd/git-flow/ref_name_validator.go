@@ -1,4 +1,4 @@
-package main
+package gitflow
 
 import (
 	"errors"
@@ -6,43 +6,15 @@ import (
 	"regexp"
 
 	"github.com/manifoldco/promptui"
-	"github.com/sirupsen/logrus"
 )
 
-var (
-	ErrUnstagedChanges  = errors.New("There are unstaged changes in your working directory")
-	ErrIndexUncommitted = errors.New("There are uncommitted changes in your index")
+type ValidationTarget int
+
+const (
+	REF_NAME_VALIDATION ValidationTarget = iota
+	PrefixNameValidation
+	TagNameValidation
 )
-
-func IsRepoHeadless() bool {
-	logrus.Trace("IsRepoHeadless")
-	revparse := execute("git", "rev-parse", "--quiet", "--verify", "HEAD")
-	return !revparse.Succeeded()
-}
-
-func IsWorkingTreeClean() bool {
-	logrus.Trace("IsWorkingTreeClean")
-	cleanliness := execute("git", "diff", "--no-ext-diff", "--ignore-submodules", "--quiet", "--exit-code")
-	return cleanliness.Succeeded()
-}
-
-func IsIndexClean() bool {
-	logrus.Trace("IsIndexClean")
-	cleanliness := execute("git", "diff-index", "--cached", "--quiet", "--ignore-submodules", "HEAD", "--")
-	return cleanliness.Succeeded()
-}
-
-func EnsureCleanWorkingTree() error {
-	logrus.Trace("EnsureCleanWorkingTree")
-	if !IsWorkingTreeClean() {
-		return ErrUnstagedChanges
-	} else {
-		if !IsIndexClean() {
-			return ErrIndexUncommitted
-		}
-	}
-	return nil
-}
 
 var (
 	// https://stackoverflow.com/a/12093994
@@ -55,11 +27,12 @@ var (
 	GitReferenceNoMultipleDot       = regexp.MustCompile(`\.\.+`)
 	GitReferenceNoMultipleSlash     = regexp.MustCompile(`//+`)
 	GitReferenceNoSpecialChars      = regexp.MustCompile(`[\000-\037\177 \~^:?*[]+`)
-	GitReferenceNoDotLockSlashEnd   = regexp.MustCompile(`(\.(lock)?|/)$`)
+	GitReferenceNoDotLockEnd        = regexp.MustCompile(`\.(lock)?$`)
+	GitReferenceNoSlashEnd          = regexp.MustCompile(`/$`)
 	GitReferenceMustContainSlash    = regexp.MustCompile(`^[^/]+$`)
 )
 
-func ValidateRefName(ref_name string) error {
+func PrefixValidator(ref_name string) error {
 	if GitReferenceNotAt.MatchString(ref_name) {
 		return errors.New(fmt.Sprintf("Cannot only be '@': %s", ref_name))
 	}
@@ -81,11 +54,19 @@ func ValidateRefName(ref_name string) error {
 	if GitReferenceNoSpecialChars.MatchString(ref_name) {
 		return errors.New(fmt.Sprintf("Contains an unallowed special character: %s", ref_name))
 	}
-	if GitReferenceNoDotLockSlashEnd.MatchString(ref_name) {
-		return errors.New(fmt.Sprintf("Cannot end in '.', '.lock', or '/': %s", ref_name))
+	if GitReferenceNoDotLockEnd.MatchString(ref_name) {
+		return errors.New(fmt.Sprintf("Cannot end in '.', '.lock': %s", ref_name))
 	}
+	return nil
+}
+
+func ValidateRefName(ref_name string) error {
+	PrefixValidator(ref_name)
 	if GitReferenceMustContainSlash.MatchString(ref_name) {
 		return errors.New(fmt.Sprintf("Must contain at least one '/': %s", ref_name))
+	}
+	if GitReferenceNoSlashEnd.MatchString(ref_name) {
+		return errors.New(fmt.Sprintf("Cannot end in '/': %s", ref_name))
 	}
 	return nil
 }
@@ -94,17 +75,35 @@ func ValidateBranchName(ref_name string) error {
 	return ValidateRefName(fmt.Sprintf("refs/heads/%s", ref_name))
 }
 
-func PromptForBranchName(prompt_message string, default_value string) string {
-	prompt := promptui.Prompt{
-		Label:    prompt_message,
-		Validate: ValidateBranchName,
-		Default:  default_value,
-	}
+func ValidatePrefixName(ref_name string) error {
+	return PrefixValidator(fmt.Sprintf("refs/heads/%s", ref_name))
+}
 
+func ValidateTagPrefix(tag_prefix string) error {
+	return ValidatePrefixName(tag_prefix)
+}
+
+func PromptForInput(inputType ValidationTarget, promptMessage string, defaultValue string) string {
+	var validator func(string) error
+	switch inputType {
+	case TagNameValidation:
+		validator = ValidateTagPrefix
+		break
+	case PrefixNameValidation:
+		validator = ValidatePrefixName
+		break
+	default:
+		validator = ValidateBranchName
+	}
+	prompt := promptui.Prompt{
+		Label:    promptMessage,
+		Validate: validator,
+		Default:  defaultValue,
+	}
 	result, err := prompt.Run()
 	if nil != err {
-		fmt.Printf("Prompt failed %v\n", err)
-		return PromptForBranchName(prompt_message, default_value)
+		fmt.Printf("Prompt failed %v", err)
+		return PromptForInput(inputType, promptMessage, defaultValue)
 	}
 	return result
 }

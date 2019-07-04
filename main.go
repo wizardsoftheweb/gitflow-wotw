@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	if err := gitflow.GitFlowCmd.Execute(); err != nil {
+	if err := gitflow.PackageCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}

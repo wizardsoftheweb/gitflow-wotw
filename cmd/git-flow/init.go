@@ -17,7 +17,7 @@ var Defaults bool
 var Force bool
 
 func init() {
-	GitFlowCmd.AddCommand(InitCmd)
+	PackageCmd.AddCommand(InitCmd)
 	InitCmd.Flags().BoolVarP(
 		&Defaults,
 		"defaults",

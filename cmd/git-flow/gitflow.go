@@ -4,11 +4,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var GITFLOW_VERSION = "0.0.0"
+var PackageVersion = "0.0.0"
 
-var GitFlowCmd = &cobra.Command{
-	Use:     "gitflow",
-	Version: GITFLOW_VERSION,
+var PackageCmd = &cobra.Command{
+	Use:     "git-flow",
+	Version: PackageVersion,
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},
@@ -17,7 +17,7 @@ var GitFlowCmd = &cobra.Command{
 var Verbosity int
 
 func init() {
-	GitFlowCmd.PersistentFlags().CountVarP(
+	PackageCmd.PersistentFlags().CountVarP(
 		&Verbosity,
 		"verbose",
 		"v",
