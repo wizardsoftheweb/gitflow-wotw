@@ -18,3 +18,7 @@ func BranchNoColor(remote bool) CommandResponse {
 	}
 	return ExecCmd(action...)
 }
+
+func GitInit() CommandResponse {
+	return ExecCmd("git", "init")
+}

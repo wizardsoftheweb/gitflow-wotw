@@ -72,7 +72,6 @@ func BootstrapCli(verbosity_level int) *cli.App {
 	}
 	app.Before = PopulateContext
 	app.After = func(context *cli.Context) error {
-		IsWorkingTreeClean()
 		return nil
 	}
 	return app
