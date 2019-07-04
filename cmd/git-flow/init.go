@@ -7,7 +7,8 @@ import (
 )
 
 var InitCmd = &cobra.Command{
-	Use: "init",
+	Use:              "init",
+	TraverseChildren: true,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("wat")
 	},
