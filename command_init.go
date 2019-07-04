@@ -24,6 +24,7 @@ var (
 	ErrHeadlessRepo                        = errors.New("Unable to initialize in a bare repo")
 	ErrAlreadyInitialized                  = errors.New("The repo is already initialized; try again with -f")
 	ErrProductionMustDifferFromDevelopment = errors.New("The production branch must differ from the development branch")
+	ErrUnableToConfigure                   = errors.New("Unable to configure the repo")
 )
 
 var (
@@ -162,7 +163,7 @@ func ConstructDevBranchNameSuggestions(context *cli.Context, repo Repository) er
 	return nil
 }
 
-func BuildDevBranch(context *cli.Context, repo *Repository) string {
+func BuildDevBranch(context *cli.Context, repo *Repository, master string) string {
 	dev := PromptForBranchName(
 		fmt.Sprintf("Branch name for dev [%s]", ActiveCommandInitState.DevDefaultSuggestion),
 	)
@@ -172,6 +173,8 @@ func BuildDevBranch(context *cli.Context, repo *Repository) string {
 			devMaster := fmt.Sprintf("origin/%s", dev)
 			if repo.DoesBranchExistRemotely(devMaster) {
 				execute("git", "branch", dev, devMaster)
+			} else {
+				execute("git", "branch", "--no-track", dev, master)
 			}
 		} else {
 			logrus.Warning(fmt.Sprintf("The chosen dev branch %s does not exist locally", dev))
@@ -192,6 +195,13 @@ func EnsureHeadExists(context *cli.Context, master string) error {
 	if !verify.Succeeded() {
 		execute("git", "symbolic-ref", "HEAD", fmt.Sprintf("refs/heads/%s", master))
 		execute("git", "commit", "--allow-empty", "--quiet", "-m", "Initial commit")
+	}
+	return nil
+}
+
+func EnsureDevExists(context *cli.Context, repo *Repository, dev string) error {
+	if !repo.DoesBranchExistLocally(dev) {
+
 	}
 	return nil
 }
@@ -228,7 +238,7 @@ func CommandInitAction(context *cli.Context) error {
 			dev = DefaultGitflowBranchDevelopmentOption.Value
 		} else {
 			ConstructDevBranchNameSuggestions(context, repo)
-			dev = BuildDevBranch(context, &repo)
+			dev = BuildDevBranch(context, &repo, master)
 		}
 	}
 	err = EnsureDevAndMasterDiffer(dev, master)
@@ -236,5 +246,8 @@ func CommandInitAction(context *cli.Context) error {
 		log.Fatal(err)
 	}
 	EnsureHeadExists(context, master)
+	if !repo.HasBranchBeenConfigured(master) && !repo.HasBranchBeenConfigured(dev) {
+		return ErrUnableToConfigure
+	}
 	return nil
 }
