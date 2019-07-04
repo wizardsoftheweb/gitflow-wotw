@@ -2,7 +2,10 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -11,7 +14,12 @@ var (
 	ErrUnableToProcessCrudRequest = errors.New("Unablet to process your CRUD request")
 )
 
-type OptionKeyStore map[[]string]string
+type ConfigStorageHandler struct {
+	dotGitDir   FileSystemObject
+	rawContents string
+}
+
+type OptionKeyStore map[string]string
 
 var (
 	OptionKeyCache = make(OptionKeyStore)
@@ -33,8 +41,8 @@ type GitOption struct {
 	Value      string
 }
 
-func (option GitOption) New(arguments ...string) *GitOption {
-	newOption = &GitOption{}
+func NewGitOption(arguments ...string) *GitOption {
+	newOption := &GitOption{}
 	newOption.Value, arguments = arguments[len(arguments)-1], arguments[:len(arguments)-1]
 	newOption.Key, arguments = arguments[len(arguments)-1], arguments[:len(arguments)-1]
 	newOption.Section, arguments = arguments[0], arguments[1:]
@@ -49,17 +57,18 @@ type GitConfig struct {
 }
 
 func GenerateOptionName(arguments ...string) string {
-	name, ok := OptionKeyCache[arguments]
+	args := fmt.Sprintf("%s", arguments)
+	name, ok := OptionKeyCache[args]
 	if !ok {
 		name := strings.Join(arguments, ".")
-		OptionKeyCache[arguments] = name
+		OptionKeyCache[args] = name
 	}
 	return name
 }
 
 func (config *GitConfig) create(arguments ...string) (string, error) {
-	key := GenerateOptionName(arguments...)
-	value := GitOption.New(arguments...)
+	key := GenerateOptionName(arguments[:len(arguments)-1]...)
+	value := NewGitOption(arguments...)
 	config.Options[key] = value
 	return "", nil
 
@@ -71,12 +80,12 @@ func (config *GitConfig) read(arguments ...string) (string, error) {
 	if !ok {
 		return "", ErrConfigOptionNotFound
 	}
-	return value, nil
+	return value.Value, nil
 }
 
 func (config *GitConfig) update(arguments ...string) (string, error) {
-	key := GenerateOptionName(arguments...)
-	value := GitOption.New(arguments...)
+	key := GenerateOptionName(arguments[:len(arguments)-1]...)
+	value := NewGitOption(arguments...)
 	config.Options[key] = value
 	return "", nil
 }
@@ -101,63 +110,41 @@ func (config *GitConfig) Option(action GitConfigCrud, arguments ...string) (stri
 	return "", nil
 }
 
-// type ConfigStorageHandler struct {
-// 	dotGitDir   FileSystemObject
-// 	rawContents string
-// }
+type SectionHeaderFormats int
 
-// type GitConfigCrud int
+const (
+	HEADER_WITH_SUBHEADING SectionHeaderFormats = iota
+	HEADER_WITHOUT
+)
 
-// const (
-// 	GIT_CONFIG_CREATE GitConfigCrud = iota
-// 	GIT_CONFIG_READ
-// 	GIT_CONFIG_UPDATE
-// 	GIT_CONFIG_DELETE
-// )
+var (
+	GitConfigSectionFileHeaderFormats = []string{
+		"[%s \"%s\"]",
+		"[%s]",
+	}
+	GitConfigSectionEnvironmentFormats = []string{
+		"%s.%s",
+		"%s",
+	}
+)
 
-// type GitConfigOptions map[string]string
-
-// type GitConfigSection struct {
-// 	Heading    string
-// 	Subheading string
-// 	Options    GitConfigOptions
-// }
-
-// type SectionHeaderFormats int
-
-// const (
-// 	HEADER_WITH_SUBHEADING SectionHeaderFormats = iota
-// 	HEADER_WITHOUT
-// )
-
-// var (
-// 	GitConfigSectionFileHeaderFormats = []string{
-// 		"[%s \"%s\"]",
-// 		"[%s]",
-// 	}
-// 	GitConfigSectionEnvironmentFormats = []string{
-// 		"%s.%s",
-// 		"%s",
-// 	}
-// )
-
-// func FormatGitConfigSectionFileName(components ...string) string {
-// 	logrus.Trace("FormatGitConfigSectionFileName")
-// 	if "" == components[0] {
-// 		return ""
-// 	}
-// 	if 1 < len(components) && "" != components[1] {
-// 		return fmt.Sprintf(GitConfigSectionFileHeaderFormats[HEADER_WITH_SUBHEADING], components[0], components[1])
-// 	}
-// 	return fmt.Sprintf(GitConfigSectionFileHeaderFormats[HEADER_WITHOUT], components[0])
-// }
-// func FormatGitConfigSectionEnvironmentName(components ...string) string {
-// 	logrus.Trace("FormatGitConfigSectionEnvironmentName")
-// 	if "" == components[0] {
-// 		return ""
-// 	}
-// 	if 1 < len(components) && "" != components[1] {
-// 		return fmt.Sprintf(GitConfigSectionEnvironmentFormats[HEADER_WITH_SUBHEADING], components[0], components[1])
-// 	}
-// 	return fmt.Sprintf(GitConfigSectionEnvironmentFormats[HEADER_WITHOUT], components[0])
-// }
+func FormatGitConfigSectionFileName(components ...string) string {
+	logrus.Trace("FormatGitConfigSectionFileName")
+	if "" == components[0] {
+		return ""
+	}
+	if 1 < len(components) && "" != components[1] {
+		return fmt.Sprintf(GitConfigSectionFileHeaderFormats[HEADER_WITH_SUBHEADING], components[0], components[1])
+	}
+	return fmt.Sprintf(GitConfigSectionFileHeaderFormats[HEADER_WITHOUT], components[0])
+}
+func FormatGitConfigSectionEnvironmentName(components ...string) string {
+	logrus.Trace("FormatGitConfigSectionEnvironmentName")
+	if "" == components[0] {
+		return ""
+	}
+	if 1 < len(components) && "" != components[1] {
+		return fmt.Sprintf(GitConfigSectionEnvironmentFormats[HEADER_WITH_SUBHEADING], components[0], components[1])
+	}
+	return fmt.Sprintf(GitConfigSectionEnvironmentFormats[HEADER_WITHOUT], components[0])
+}
