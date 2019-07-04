@@ -94,16 +94,17 @@ func ValidateBranchName(ref_name string) error {
 	return ValidateRefName(fmt.Sprintf("refs/heads/%s", ref_name))
 }
 
-func PromptForBranchName(prompt_message string) string {
+func PromptForBranchName(prompt_message string, default_value string) string {
 	prompt := promptui.Prompt{
 		Label:    prompt_message,
 		Validate: ValidateBranchName,
+		Default:  default_value,
 	}
 
 	result, err := prompt.Run()
 	if nil != err {
 		fmt.Printf("Prompt failed %v\n", err)
-		return PromptForBranchName(prompt_message)
+		return PromptForBranchName(prompt_message, default_value)
 	}
 	return result
 }
