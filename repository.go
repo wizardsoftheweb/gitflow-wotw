@@ -137,7 +137,7 @@ func (repo *Repository) HavePrefixedAllBeenConfigured() bool {
 		if "prefix" != option.Subsection {
 			continue
 		}
-		value, err := repo.config.Option(GIT_CONFIG_READ, option.Section, option.Subsection, option.Key)
+		value, _ := repo.config.Option(GIT_CONFIG_READ, option.Section, option.Subsection, option.Key)
 		if "" == value {
 			return false
 		}
