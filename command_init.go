@@ -128,6 +128,7 @@ func BuildMasterBranch(context *cli.Context, repo *Repository) string {
 	logrus.Trace("BuildMasterBranch")
 	master := PromptForBranchName(
 		fmt.Sprintf("Branch name for prod [%s]", ActiveCommandInitState.MasterDefaultSuggestion),
+		ActiveCommandInitState.MasterDefaultSuggestion,
 	)
 	repo.config.Option(GIT_CONFIG_UPDATE, "gitflow", "branch", "master", master)
 	if ActiveCommandInitState.MasterExistenceCheck {
@@ -176,6 +177,7 @@ func BuildDevBranch(context *cli.Context, repo *Repository, master string) strin
 	logrus.Trace("BuildDevBranch")
 	dev := PromptForBranchName(
 		fmt.Sprintf("Branch name for dev [%s]", ActiveCommandInitState.DevDefaultSuggestion),
+		ActiveCommandInitState.DevDefaultSuggestion,
 	)
 	repo.config.Option(GIT_CONFIG_UPDATE, "gitflow", "branch", "dev", dev)
 	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "dev"))
@@ -217,6 +219,38 @@ func EnsureDevExists(context *cli.Context, repo *Repository, dev string, master 
 		}
 	}
 	return nil
+}
+
+func CheckSinglePrefix(context *cli.Context, repo *Repository, prefix string) {
+	existingValue, _ := repo.config.Option(GIT_CONFIG_READ, "gitflow", "prefix", prefix)
+	if "" == existingValue {
+		existingValue = fmt.Sprintf("%s/", prefix)
+	} else {
+		if !context.Bool("force") {
+			return
+		}
+	}
+	desiredPrefix := PromptForBranchName(
+		fmt.Sprintf("Prefix for %s branches? [%s]", prefix, existingValue),
+		existingValue,
+	)
+	repo.config.Option(GIT_CONFIG_UPDATE, "gitflow", "prefix", prefix, desiredPrefix)
+}
+
+func CheckVersion(context *cli.Context, repo *Repository) {
+	existingValue, _ := repo.config.Option(GIT_CONFIG_READ, "gitflow", "prefix", "versiontag")
+	if "" == existingValue {
+		existingValue = fmt.Sprintf("%s", prefix)
+	} else {
+		if !context.Bool("force") {
+			return
+		}
+	}
+	desiredPrefix := PromptForBranchName(
+		fmt.Sprintf("Prefix for versions? [%s]", existingValue),
+		existingValue,
+	)
+	repo.config.Option(GIT_CONFIG_UPDATE, "gitflow", "prefix", "versiontag", desiredPrefix)
 }
 
 func CommandInitAction(context *cli.Context) error {
@@ -266,5 +300,11 @@ func CommandInitAction(context *cli.Context) error {
 		return ErrUnableToConfigure
 	}
 	execute("git", "checkout", dev)
+	if context.Bool("force") || !repo.HavePrefixedAllBeenConfigured() {
+		for _, option := range SubbranchOptions {
+			CheckSinglePrefix(context, &repo, option.Key)
+		}
+		CheckVersion(context, &repo)
+	}
 	return nil
 }

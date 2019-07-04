@@ -26,3 +26,10 @@ var OptionsToInitializeGitflow = []GitflowDefaultOptions{
 	DefaultGitflowPrefixSupportOption,
 	DefaultGitflowPrefixVersiontagOption,
 }
+
+var SubbranchOptions = []GitflowDefaultOptions{
+	DefaultGitflowPrefixFeatureOption,
+	DefaultGitflowPrefixReleaseOption,
+	DefaultGitflowPrefixHotfixOption,
+	DefaultGitflowPrefixSupportOption,
+}
