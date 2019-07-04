@@ -233,14 +233,10 @@ func CommandInitAction(context *cli.Context) error {
 	if nil != err {
 		log.Fatal(err)
 	}
-	logrus.Warning(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "master"))
-	logrus.Warning(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "dev"))
 	if context.Bool("default") {
 		logrus.Info("Using default branches")
 	}
 	repo.LoadLocalBranches()
-	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "master"))
-	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "dev"))
 	master := CheckInitialization(context, &repo, "master")
 	if "" == master {
 		if context.Bool("default") {
@@ -250,8 +246,6 @@ func CommandInitAction(context *cli.Context) error {
 			master = BuildMasterBranch(context, &repo)
 		}
 	}
-	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "master"))
-	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "dev"))
 	dev := CheckInitialization(context, &repo, "dev")
 	if "" == dev {
 		if context.Bool("default") {
@@ -261,19 +255,14 @@ func CommandInitAction(context *cli.Context) error {
 			dev = BuildDevBranch(context, &repo, master)
 		}
 	}
-	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "master"))
-	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "dev"))
 	err = EnsureDevAndMasterDiffer(dev, master)
 	if nil != err {
 		log.Fatal(err)
 	}
-	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "master"))
-	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "dev"))
 	EnsureHeadExists(context, master)
 	EnsureDevExists(context, &repo, dev, master)
-	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "master"))
-	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "dev"))
-	if !repo.HasBranchBeenConfigured(master) && !repo.HasBranchBeenConfigured(dev) {
+	repo.LoadLocalBranches()
+	if !repo.HasBranchBeenConfigured("master") && !repo.HasBranchBeenConfigured("dev") {
 		return ErrUnableToConfigure
 	}
 	execute("git", "checkout", dev)

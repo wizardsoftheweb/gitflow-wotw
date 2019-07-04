@@ -97,8 +97,11 @@ func (repo *Repository) DoesBranchExistLocally(needle string) bool {
 func (repo *Repository) HasBranchBeenConfigured(needle string) bool {
 	logrus.Trace("HasBranchBeenConfigured")
 	branch_name, err := repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", needle)
-	if nil == err && "" != branch_name && repo.DoesBranchExistLocally(needle) {
+	if nil == err && "" != branch_name && repo.DoesBranchExistLocally(branch_name) {
 		return true
+	} else {
+		logrus.Debug(err)
+		logrus.Debug(repo.DoesBranchExistLocally(branch_name))
 	}
 	return false
 }
