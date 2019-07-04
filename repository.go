@@ -8,7 +8,8 @@ import (
 )
 
 var (
-	GitBranchPattern = regexp.MustCompile(`(?m)^.*?(\w.*)\s*?`)
+	GitBranchPattern        = regexp.MustCompile(`(?m)^.*?(\w.*)\s*?`)
+	GitCurrentBranchPattern = regexp.MustCompile(`(?m)^\s*\*\s*?(\w.*)\s*?$`)
 )
 
 type Repository struct {
@@ -45,6 +46,10 @@ func (r *Repository) LocalBranches() []string {
 
 func (r *Repository) RemoteBranches() []string {
 	return r.SpecificBranches(true)
+}
+
+func (r *Repository) CurrentBranch() string {
+	return GitCurrentBranchPattern.FindStringSubmatch(BranchNoColor(false).String())
 }
 
 func (r *Repository) HasLocalBranch(needle string) bool {

@@ -11,6 +11,10 @@ func RevParseQuietVerifyHead() CommandResponse {
 	return ExecCmd("git", "rev-parse", "--quiet", "--verify", "HEAD")
 }
 
+func RevParseAbbrevRefHead() CommandResponse {
+	return ExecCmd("git", "rev-parse", "--abbrev-ref", "HEAD")
+}
+
 func BranchNoColor(remote bool) CommandResponse {
 	action := []string{"git", "branch", "--no-color"}
 	if remote {

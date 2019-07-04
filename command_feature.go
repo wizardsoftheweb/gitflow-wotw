@@ -83,7 +83,7 @@ func CommandFeatureAction(context *cli.Context) error {
 	return nil
 }
 func CommandFeatureListAction(context *cli.Context) error {
-	logrus.Debug("CommandFeatureListAction")
+	branches := PassthroughThroughPrefixedBranchesWithErrorMessage(context, false)
 
 	return nil
 }
