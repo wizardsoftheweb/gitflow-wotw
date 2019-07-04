@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/wizardsoftheweb/gitflow-wotw/cmd/gitflow"
+	gitflow "github.com/wizardsoftheweb/gitflow-wotw/cmd/git-flow"
 )
 
 func main() {
