@@ -10,4 +10,5 @@ var (
 	ErrProdDoesntExist                     = errors.New("The branch you have selected does not exist")
 	ErrUnableToConfigure                   = errors.New("Unable to configure the repo")
 	ErrProductionMustDifferFromDevelopment = errors.New("The production branch must differ from the development branch")
+	ErrCannotDetermineCurrentBranch        = errors.New("Cannot determine the current branch")
 )

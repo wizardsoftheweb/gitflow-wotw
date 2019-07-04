@@ -7,7 +7,6 @@ import (
 )
 
 func IsWorkingTreeClean() bool {
-	logrus.Debug("IsWorkingTreeClean")
 	result := ExecCmd("git", "diff", "--no-ext-diff", "--ignore-submodules", "--quiet", "--exit-code")
 	if !result.Succeeded() {
 		logrus.Fatal(ErrUnstagedChanges)
@@ -20,7 +19,6 @@ func IsWorkingTreeClean() bool {
 }
 
 func IsBranchConfigured(name string) bool {
-	logrus.Trace("IsBranchConfigured")
 	branchName := GitConfig.Get(fmt.Sprintf("gitflow.branch.%s", name))
 	logrus.Trace(branchName)
 	return "" != branchName && Repo.HasLocalBranch(branchName)
@@ -41,7 +39,6 @@ func AreMasterAndDevTheSameValue() bool {
 }
 
 func ArePrefixesConfigured() bool {
-	logrus.Trace("ArePrefixesConfigured")
 	for _, option := range DefaultPrefixes {
 		result := GitConfig.Get(option.Key)
 		if "" == result {
@@ -58,4 +55,11 @@ func IsGitFlowInitialized() bool {
 		IsDevConfigured() &&
 		AreMasterAndDevTheSameValue() &&
 		ArePrefixesConfigured()
+}
+
+func MaxInt(x int, y int) int {
+	if x > y {
+		return x
+	}
+	return y
 }
