@@ -23,6 +23,10 @@ func BranchNoColor(remote bool) CommandResponse {
 	return ExecCmd(action...)
 }
 
+func MergeBase(firstBranch string, secondBranch string) CommandResponse {
+	return ExecCmd("git", "merge-base", firstBranch, secondBranch)
+}
+
 func GitInit() CommandResponse {
 	return ExecCmd("git", "init")
 }

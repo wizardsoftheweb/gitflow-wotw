@@ -1,12 +1,8 @@
 package main
 
 import (
-	"log"
-	"os"
 	"os/exec"
 	"regexp"
-	"strconv"
-	"strings"
 	"syscall"
 
 	"github.com/sirupsen/logrus"
@@ -14,10 +10,6 @@ import (
 
 var (
 	ScreenSizePattern = regexp.MustCompile(`^.*?(\d+)\.*?(\d+)\.*?$`)
-)
-
-var (
-	SizeOfScreen ScreenSize
 )
 
 type CommandResponse struct {
@@ -56,25 +48,4 @@ func ExecCmd(args ...string) CommandResponse {
 		exitCode: parseExitCode(err),
 		exitErr:  err,
 	}
-}
-
-type ScreenSize struct {
-	Width  int
-	Height int
-}
-
-// https://stackoverflow.com/a/16569795
-func GetTermSize() ScreenSize {
-	logrus.Debug("GetTermSize")
-	cmd := exec.Command("stty", "size")
-	cmd.Stdin = os.Stdin
-	out, err := cmd.Output()
-	if err != nil {
-		log.Fatal(err)
-	}
-	screenSize := [2]int{}
-	for index, match := range ScreenSizePattern.FindAllStringSubmatch(string(out), -1) {
-		screenSize[index], _ = strconv.Atoi(strings.Join(match, ""))
-	}
-	return ScreenSize{Width: screenSize[0], Height: screenSize[1]}
 }

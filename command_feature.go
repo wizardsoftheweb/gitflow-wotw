@@ -76,7 +76,6 @@ var (
 func BeforeFeature(context *cli.Context) error {
 	Repo.Prefix = GitConfig.GetWithDefault(FEATURE_PREFIX_KEY, DefaultPrefixFeature.Value)
 	Repo.HumanPrefix = strings.TrimSuffix(Repo.Prefix, "/")
-	SizeOfScreen = GetTermSize()
 	return nil
 }
 
@@ -86,9 +85,41 @@ func CommandFeatureAction(context *cli.Context) error {
 }
 func CommandFeatureListAction(context *cli.Context) error {
 	branches := PassthroughThroughPrefixedBranchesWithErrorMessage(context, false)
-	fmt.Println(branches)
-	fmt.Println(SizeOfScreen)
-	fmt.Println(GetTermSize())
+	var width int
+	if context.Bool("verbose") {
+		for _, branch := range branches {
+			width = MaxInt(width, len(branch))
+		}
+		width += 3
+	}
+	for _, branch := range branches {
+		branchFullname := fmt.Sprintf("%s%s", Repo.Prefix, branch)
+		if Repo.CurrentBranch() == branchFullname {
+			fmt.Printf("* ")
+		} else {
+			fmt.Printf("  ")
+		}
+		if context.Bool("verbose") {
+			devBranch := GitConfig.Get(DEV_BRANCH_KEY)
+			base := MergeBase(branchFullname, devBranch)
+			devSha := RevParseArgs(devBranch)
+			branchSha := RevParseArgs(branchFullname)
+			fmt.Printf(fmt.Sprintf("%%-%ds", width), branch)
+			switch {
+			case branchSha == devSha:
+				fmt.Printf("(sha is identical to dev)")
+			case base == branchSha:
+				fmt.Printf("(may ff to dev)")
+			case base == devSha:
+				fmt.Printf("(identical to latest dev")
+			default:
+				fmt.Printf("may be rebased")
+			}
+
+		} else {
+			fmt.Printf("%s", branch)
+		}
+	}
 	return nil
 }
 func CommandFeatureStartAction(context *cli.Context) error {

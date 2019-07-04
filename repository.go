@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -50,10 +51,11 @@ func (r *Repository) RemoteBranches() []string {
 
 func (r *Repository) CurrentBranch() string {
 	results := GitCurrentBranchPattern.FindStringSubmatch(BranchNoColor(false).String())
-	if 1 <= len(results) {
+	fmt.Println(results)
+	if 2 < len(results) {
 		logrus.Fatal(ErrCannotDetermineCurrentBranch)
 	}
-	return results[0]
+	return results[1]
 }
 
 func (r *Repository) HasLocalBranch(needle string) bool {
