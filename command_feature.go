@@ -7,10 +7,20 @@ import (
 
 var (
 	CommandFeature = cli.Command{
-		Name:        "feature",
-		Flags:       []cli.Flag{},
-		Action:      CommandFeatureAction,
-		Subcommands: []cli.Commands{},
+		Name:   "feature",
+		Flags:  []cli.Flag{},
+		Action: CommandFeatureAction,
+		Subcommands: []cli.Commands{
+			CommandFeatureList,
+			CommandFeatureStart,
+			CommandFeatureFinish,
+			CommandFeaturePublish,
+			CommandFeatureTrack,
+			CommandFeatureDiff,
+			CommandFeatureRebase,
+			CommandFeatureCheckout,
+			CommandFeaturePull,
+		},
 	}
 )
 
