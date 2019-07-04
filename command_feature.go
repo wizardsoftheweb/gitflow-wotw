@@ -14,6 +14,6 @@ var (
 )
 
 func CommandFeatureAction(context *cli.Context) error {
-	logrus.Trace("CommandFeatureAction")
+	logrus.Debug("CommandFeatureAction")
 	return nil
 }

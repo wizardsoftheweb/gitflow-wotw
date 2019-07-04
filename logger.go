@@ -41,10 +41,10 @@ func BootstrapLogger(verbosity_level int) {
 		logrus.SetLevel(logrus.InfoLevel)
 		break
 	case 3 == verbosity_level:
-		logrus.SetLevel(logrus.DebugLevel)
+		logrus.SetLevel(logrus.TraceLevel)
 		break
 	default:
-		logrus.SetLevel(logrus.TraceLevel)
+		logrus.SetLevel(logrus.DebugLevel)
 		break
 	}
 	logrus.GetLevel()

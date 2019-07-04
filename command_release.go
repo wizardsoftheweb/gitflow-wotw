@@ -14,6 +14,6 @@ var (
 )
 
 func CommandReleaseAction(context *cli.Context) error {
-	logrus.Trace("CommandReleaseAction")
+	logrus.Debug("CommandReleaseAction")
 	return nil
 }

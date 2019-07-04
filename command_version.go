@@ -22,7 +22,7 @@ var (
 )
 
 func CommandVersionAction(context *cli.Context) error {
-	logrus.Trace("CommandVersionAction")
+	logrus.Debug("CommandVersionAction")
 	fmt.Fprintf(
 		context.App.Writer,
 		"Version %s of gitflow-wotw was based on the following work:\n\tPackage: %s\n\tVersion: %s\n\tUrl: %s",

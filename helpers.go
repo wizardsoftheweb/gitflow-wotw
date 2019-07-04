@@ -3,7 +3,7 @@ package main
 import "github.com/sirupsen/logrus"
 
 func IsWorkingTreeClean() bool {
-	logrus.Trace("IsWorkingTreeClean")
+	logrus.Debug("IsWorkingTreeClean")
 	result := ExecCmd("git", "diff", "--no-ext-diff", "--ignore-submodules", "--quiet", "--exit-code")
 	if !result.Succeeded() {
 		logrus.Fatal(ErrUnstagedChanges)

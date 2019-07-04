@@ -14,6 +14,6 @@ var (
 )
 
 func CommandHotfixAction(context *cli.Context) error {
-	logrus.Trace("CommandHotfixAction")
+	logrus.Debug("CommandHotfixAction")
 	return nil
 }

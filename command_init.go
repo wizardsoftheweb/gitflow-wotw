@@ -14,6 +14,6 @@ var (
 )
 
 func CommandInitAction(context *cli.Context) error {
-	logrus.Trace("CommandInitAction")
+	logrus.Debug("CommandInitAction")
 	return nil
 }
