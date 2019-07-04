@@ -235,8 +235,12 @@ func CommandInitAction(context *cli.Context) error {
 	if nil != err {
 		log.Fatal(err)
 	}
-	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "master"))
-	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "dev"))
+	logrus.Warning(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "master"))
+	logrus.Warning(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "dev"))
+	logrus.Warning(repo.config.Option(GIT_CONFIG_UPDATE, "gitflow", "branch", "master", "qqq"))
+	logrus.Warning(repo.config.Option(GIT_CONFIG_UPDATE, "gitflow", "branch", "dev", "zzz"))
+	logrus.Warning(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "master"))
+	logrus.Warning(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "dev"))
 	if context.Bool("default") {
 		logrus.Info("Using default branches")
 	}
