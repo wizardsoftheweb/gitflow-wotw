@@ -2,6 +2,7 @@ package main
 
 import (
 	"regexp"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 )
@@ -10,11 +11,23 @@ var (
 	GitBranchPattern = regexp.MustCompile(`(?m)^.*?(\w.*)\s*?`)
 )
 
-type Repository struct{}
+type Repository struct {
+	Prefix string
+}
 
 var (
 	Repo = &Repository{}
 )
+
+func (r *Repository) SpecificPrefixBranches(remote bool) []string {
+	prefixedBranches := []string{}
+	for _, branch := range r.SpecificBranches(remote) {
+		if strings.HasPrefix(branch, r.Prefix) {
+			prefixedBranches = append(prefixedBranches, branch)
+		}
+	}
+	return prefixedBranches
+}
 
 func (r *Repository) SpecificBranches(remote bool) []string {
 	logrus.Trace("SpecificBranches")

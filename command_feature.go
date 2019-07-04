@@ -21,8 +21,13 @@ var (
 			CommandFeatureCheckout,
 			CommandFeaturePull,
 		},
+		Before: BeforeFeature,
 	}
 )
+
+func BeforeFeature(context *cli.Context) error {
+	Repo.Prefix = GitConfig.GetWithDefault(FEATURE_PREFIX_KEY, DefaultPrefixFeature.Value)
+}
 
 func CommandFeatureAction(context *cli.Context) error {
 	logrus.Debug("CommandFeatureAction")
