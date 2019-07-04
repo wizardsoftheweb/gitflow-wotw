@@ -1,6 +1,10 @@
 package main
 
-import "github.com/sirupsen/logrus"
+import (
+	"fmt"
+
+	"github.com/sirupsen/logrus"
+)
 
 func IsWorkingTreeClean() bool {
 	logrus.Debug("IsWorkingTreeClean")
@@ -13,4 +17,45 @@ func IsWorkingTreeClean() bool {
 		logrus.Fatal(ErrIndexUncommitted)
 	}
 	return true
+}
+
+func IsBranchConfigured(name string) bool {
+	logrus.Trace("IsBranchConfigured")
+	branchName := GitConfig.Get(fmt.Sprintf("gitflow.branch.%s", name))
+	logrus.Trace(branchName)
+	return "" != branchName && Repo.HasLocalBranch(branchName)
+}
+
+func IsMasterConfigured() bool {
+	return IsBranchConfigured("master")
+}
+
+func IsDevConfigured() bool {
+	return IsBranchConfigured("dev")
+}
+
+func AreMasterAndDevTheSameValue() bool {
+	masterName := GitConfig.Get("gitflow.branch.master")
+	devName := GitConfig.Get("gitflow.branch.dev")
+	return "" != masterName && "" != devName && masterName != devName
+}
+
+func ArePrefixesConfigured() bool {
+	logrus.Trace("ArePrefixesConfigured")
+	for _, option := range DefaultPrefixes {
+		result := GitConfig.Get(option.Key)
+		if "" == result {
+			return false
+		} else {
+			logrus.Trace(result)
+		}
+	}
+	return true
+}
+
+func IsGitFlowInitialized() bool {
+	return IsMasterConfigured() &&
+		IsDevConfigured() &&
+		AreMasterAndDevTheSameValue() &&
+		ArePrefixesConfigured()
 }
