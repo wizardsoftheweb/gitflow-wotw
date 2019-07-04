@@ -249,5 +249,6 @@ func CommandInitAction(context *cli.Context) error {
 	if !repo.HasBranchBeenConfigured(master) && !repo.HasBranchBeenConfigured(dev) {
 		return ErrUnableToConfigure
 	}
+	execute("git", "checkout", dev)
 	return nil
 }
