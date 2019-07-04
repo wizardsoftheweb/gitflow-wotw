@@ -13,6 +13,21 @@ var (
 	}
 )
 
+func InitProcedural(context *cli.Context) error {
+	result := RevParseGitDir()
+	if !result.Succeeded() {
+		GitInit()
+	} else {
+		result = RevParseQuietVerifyHead()
+		if !result.Succeeded() {
+			IsWorkingTreeClean()
+		} else {
+			logrus.Fatal(ErrHeadlessRepo)
+		}
+	}
+	return nil
+}
+
 func CommandInitAction(context *cli.Context) error {
 	logrus.Debug("CommandInitAction")
 	return nil
