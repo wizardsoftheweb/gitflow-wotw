@@ -24,6 +24,7 @@ var (
 	ErrHeadlessRepo                        = errors.New("Unable to initialize in a bare repo")
 	ErrAlreadyInitialized                  = errors.New("The repo is already initialized; try again with -f")
 	ErrProductionMustDifferFromDevelopment = errors.New("The production branch must differ from the development branch")
+	ErrUnableToConfigure                   = errors.New("Unable to configure the repo")
 )
 
 var (
@@ -82,6 +83,8 @@ func CheckInitialization(context *cli.Context, repo *Repository, branch string) 
 }
 
 func CheckIfABranchSuggestionExists(suggestions []string, branches []string) string {
+
+	logrus.Trace("CheckIfABranchSuggestionExists")
 	for _, suggestion := range suggestions {
 		for _, branch := range branches {
 			if suggestion == branch {
@@ -93,6 +96,8 @@ func CheckIfABranchSuggestionExists(suggestions []string, branches []string) str
 }
 
 func ConstructMasterBranchNameSuggestions(context *cli.Context, repo Repository) error {
+
+	logrus.Trace("ConstructMasterBranchNameSuggestions")
 	if 0 == len(repo.localBranches) {
 		logrus.Info("No branches exist; creating now")
 		ActiveCommandInitState.MasterExistenceCheck = false
@@ -102,7 +107,7 @@ func ConstructMasterBranchNameSuggestions(context *cli.Context, repo Repository)
 			"branch",
 			"master",
 		)
-		if nil != err {
+		if nil != err && ErrConfigOptionNotFound != err {
 			logrus.Fatal(err)
 		}
 		if "" != value {
@@ -119,6 +124,8 @@ func ConstructMasterBranchNameSuggestions(context *cli.Context, repo Repository)
 }
 
 func BuildMasterBranch(context *cli.Context, repo *Repository) string {
+
+	logrus.Trace("BuildMasterBranch")
 	master := PromptForBranchName(
 		fmt.Sprintf("Branch name for prod [%s]", ActiveCommandInitState.MasterDefaultSuggestion),
 	)
@@ -137,6 +144,8 @@ func BuildMasterBranch(context *cli.Context, repo *Repository) string {
 }
 
 func ConstructDevBranchNameSuggestions(context *cli.Context, repo Repository) error {
+
+	logrus.Trace("ConstructDevBranchNameSuggestions")
 	if 0 == len(repo.localBranches) {
 		logrus.Info("No branches exist; creating now")
 		ActiveCommandInitState.DevExistenceCheck = false
@@ -146,7 +155,7 @@ func ConstructDevBranchNameSuggestions(context *cli.Context, repo Repository) er
 			"branch",
 			"dev",
 		)
-		if nil != err {
+		if nil != err && ErrConfigOptionNotFound != err {
 			logrus.Fatal(err)
 		}
 		if "" != value {
@@ -162,16 +171,21 @@ func ConstructDevBranchNameSuggestions(context *cli.Context, repo Repository) er
 	return nil
 }
 
-func BuildDevBranch(context *cli.Context, repo *Repository) string {
+func BuildDevBranch(context *cli.Context, repo *Repository, master string) string {
+
+	logrus.Trace("BuildDevBranch")
 	dev := PromptForBranchName(
 		fmt.Sprintf("Branch name for dev [%s]", ActiveCommandInitState.DevDefaultSuggestion),
 	)
 	repo.config.Option(GIT_CONFIG_UPDATE, "gitflow", "branch", "dev", dev)
+	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "dev"))
 	if ActiveCommandInitState.DevExistenceCheck {
 		if !repo.DoesBranchExistLocally(dev) {
 			devMaster := fmt.Sprintf("origin/%s", dev)
 			if repo.DoesBranchExistRemotely(devMaster) {
 				execute("git", "branch", dev, devMaster)
+			} else {
+				execute("git", "branch", "--no-track", dev, master)
 			}
 		} else {
 			logrus.Warning(fmt.Sprintf("The chosen dev branch %s does not exist locally", dev))
@@ -181,8 +195,28 @@ func BuildDevBranch(context *cli.Context, repo *Repository) string {
 }
 
 func EnsureDevAndMasterDiffer(dev string, master string) error {
+	logrus.Trace("EnsureDevAndMasterDiffer")
 	if dev == master {
 		return ErrProductionMustDifferFromDevelopment
+	}
+	return nil
+}
+
+func EnsureHeadExists(context *cli.Context, master string) error {
+	logrus.Trace("EnsureHeadExists")
+	verify := execute("git", "rev-parse", "--quiet", "--verify", "HEAD")
+	if !verify.Succeeded() {
+		execute("git", "symbolic-ref", "HEAD", fmt.Sprintf("refs/heads/%s", master))
+		execute("git", "commit", "--allow-empty", "--quiet", "-m", "Initial commit")
+	}
+	return nil
+}
+
+func EnsureDevExists(context *cli.Context, repo *Repository, dev string) error {
+
+	logrus.Trace("EnsureDevExists")
+	if !repo.DoesBranchExistLocally(dev) {
+
 	}
 	return nil
 }
@@ -197,13 +231,18 @@ func CommandInitAction(context *cli.Context) error {
 	}
 	directory, _ := os.Getwd()
 	repo, err := EnsureRepoIsAvailable(directory)
+
 	if nil != err {
 		log.Fatal(err)
 	}
+	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "master"))
+	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "dev"))
 	if context.Bool("default") {
 		logrus.Info("Using default branches")
 	}
 	repo.LoadLocalBranches()
+	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "master"))
+	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "dev"))
 	master := CheckInitialization(context, &repo, "master")
 	if "" == master {
 		if context.Bool("default") {
@@ -213,18 +252,31 @@ func CommandInitAction(context *cli.Context) error {
 			master = BuildMasterBranch(context, &repo)
 		}
 	}
+	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "master"))
+	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "dev"))
 	dev := CheckInitialization(context, &repo, "dev")
 	if "" == dev {
 		if context.Bool("default") {
 			dev = DefaultGitflowBranchDevelopmentOption.Value
 		} else {
 			ConstructDevBranchNameSuggestions(context, repo)
-			dev = BuildDevBranch(context, &repo)
+			dev = BuildDevBranch(context, &repo, master)
 		}
 	}
+	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "master"))
+	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "dev"))
 	err = EnsureDevAndMasterDiffer(dev, master)
 	if nil != err {
 		log.Fatal(err)
 	}
+	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "master"))
+	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "dev"))
+	EnsureHeadExists(context, master)
+	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "master"))
+	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "dev"))
+	if !repo.HasBranchBeenConfigured(master) && !repo.HasBranchBeenConfigured(dev) {
+		return ErrUnableToConfigure
+	}
+	execute("git", "checkout", dev)
 	return nil
 }
