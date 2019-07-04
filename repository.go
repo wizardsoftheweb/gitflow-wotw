@@ -12,7 +12,8 @@ var (
 )
 
 type Repository struct {
-	Prefix string
+	Prefix      string
+	HumanPrefix string
 }
 
 var (
@@ -23,7 +24,7 @@ func (r *Repository) SpecificPrefixBranches(remote bool) []string {
 	prefixedBranches := []string{}
 	for _, branch := range r.SpecificBranches(remote) {
 		if strings.HasPrefix(branch, r.Prefix) {
-			prefixedBranches = append(prefixedBranches, branch)
+			prefixedBranches = append(prefixedBranches, strings.Replace(branch, r.Prefix, "", 1))
 		}
 	}
 	return prefixedBranches
