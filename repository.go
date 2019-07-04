@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"path/filepath"
 	"regexp"
@@ -95,7 +96,11 @@ func (repo *Repository) DoesBranchExistLocally(needle string) bool {
 }
 
 func (repo *Repository) HasBranchBeenConfigured(needle string) bool {
+
+	logrus.Trace("HasBranchBeenConfigured")
 	branch_name, err := repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", needle)
+
+	logrus.Debug(fmt.Sprintf("%s is named '%s'", needle, branch_name))
 	if nil != err && "" != branch_name && repo.DoesBranchExistLocally(needle) {
 		return true
 	}
