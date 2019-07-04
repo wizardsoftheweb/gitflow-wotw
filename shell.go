@@ -13,8 +13,16 @@ type CommandResponse struct {
 	exitErr  error
 }
 
-func (response *CommandResponse) Succeeded() bool {
+func (response CommandResponse) Succeeded() bool {
 	return 0 == response.exitCode
+}
+
+func (c CommandResponse) Bool() bool {
+	return c.Succeeded()
+}
+
+func (c CommandResponse) String() string {
+	return string(c.result)
 }
 
 func parseExitCode(err error) int {

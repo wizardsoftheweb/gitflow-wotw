@@ -22,12 +22,10 @@ var (
 
 func InitProcedural(context *cli.Context) error {
 	logrus.Trace("InitProcedural")
-	result := RevParseGitDir()
-	if !result.Succeeded() {
+	if !RevParseGitDir().Succeeded() {
 		GitInit()
 	} else {
-		result = RevParseQuietVerifyHead()
-		if result.Succeeded() {
+		if RevParseQuietVerifyHead().Succeeded() {
 			IsWorkingTreeClean()
 		} else {
 			logrus.Fatal(ErrHeadlessRepo)
@@ -50,12 +48,7 @@ func InitProcedural(context *cli.Context) error {
 		if 0 == len(Repo.LocalBranches()) {
 			fmt.Fprint(context.App.Writer, "No branches exist; creating now")
 			check_existence = false
-			value := GitConfig.Get(MASTER_BRANCH_KEY)
-			if "" == value {
-				suggestion = "master"
-			} else {
-				suggestion = value
-			}
+			suggestion := GitConfig.GetWithDefault(MASTER_BRANCH_KEY, "master")
 		} else {
 			fmt.Fprint(context.App.Writer, "Which branch should be used for production?")
 			localBranches := Repo.LocalBranches()
@@ -98,13 +91,7 @@ func InitProcedural(context *cli.Context) error {
 		logrus.Trace("Checking the branch count")
 		if 0 == len(Repo.LocalBranches()) {
 			check_existence = false
-			value := GitConfig.Get(DEV_BRANCH_KEY)
-			if "" == value {
-				suggestion = "dev"
-			} else {
-				suggestion = value
-			}
-			logrus.Trace(fmt.Sprintf("Ran with %s", suggestion))
+			value := GitConfig.GetWithDefault(DEV_BRANCH_KEY, "dev'")
 		} else {
 			fmt.Fprint(context.App.Writer, "Which branch should be used for development?")
 			localBranches := Repo.LocalBranches()
@@ -120,12 +107,7 @@ func InitProcedural(context *cli.Context) error {
 			logrus.Trace(suggestion)
 			if "" == suggestion {
 				check_existence = false
-				value := GitConfig.Get(DEV_BRANCH_KEY)
-				if "" == value {
-					suggestion = "dev"
-				} else {
-					suggestion = value
-				}
+				suggestion = GitConfig.GetWithDefault(DEV_BRANCH_KEY, "dev")
 			}
 		}
 		devName = PromptForInput(
@@ -146,9 +128,8 @@ func InitProcedural(context *cli.Context) error {
 			}
 		}
 	}
-	result = RevParseQuietVerifyHead()
 	var createdBranch bool
-	if !result.Succeeded() {
+	if !RevParseQuietVerifyHead().Succeeded() {
 		ExecCmd("git", "symbolic-ref", "HEAD", fmt.Sprintf("refs/heads/%s", masterName))
 		ExecCmd("git", "commit", "--allow-empty", "--quiet", "-m", "Initial commit")
 		createdBranch = true
@@ -171,26 +152,7 @@ func InitProcedural(context *cli.Context) error {
 	if context.Bool("force") || !ArePrefixesConfigured() {
 		fmt.Fprint(context.App.Writer, "Some prefixes need to be configured")
 		for _, prefix := range DefaultPrefixes {
-			value := GitConfig.Get(prefix.Key)
-			defaultValue := value
-			logrus.Trace(fmt.Sprintf("'%s'", value))
-			if context.Bool("force") || "" == value {
-				var newValue string
-				if context.Bool("default") {
-					newValue = prefix.Value
-				} else {
-					if "" == value {
-						defaultValue = prefix.Value
-					}
-					newValue = PromptForInput(
-						PREFIX_NAME_VALIDATION,
-						fmt.Sprintf("Prefix for %s branches? [%s]", prefix.Value, defaultValue),
-						defaultValue,
-					)
-				}
-				logrus.Trace(prefix.Key, newValue)
-				GitConfig.Write(prefix.Key, newValue)
-			}
+			ParsePrefix(context, prefix.Key, prefix.Value)
 		}
 		for _, prefix := range DefaultTags {
 			value := GitConfig.Get(prefix.Key)
@@ -213,6 +175,21 @@ func InitProcedural(context *cli.Context) error {
 				GitConfig.Write(prefix.Key, newValue)
 			}
 		}
+	}
+	return nil
+}
+func ParsePrefix(context *cli.Context, prefixKey string, defaultValue string) error {
+	if !context.Bool("force") {
+		return nil
+	} else {
+		var newValue string
+		if context.Bool("default") {
+			newValue = defaultValue
+		} else {
+			value := GitConfig.GetWithDefault(prefixKey, defaultValue)
+			newValue = PromptForInput(PREFIX_NAME_VALIDATION, "test", value)
+		}
+		GitConfig.Write(prefixKey, newValue)
 	}
 	return nil
 }
