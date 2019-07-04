@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -75,6 +76,7 @@ var (
 func BeforeFeature(context *cli.Context) error {
 	Repo.Prefix = GitConfig.GetWithDefault(FEATURE_PREFIX_KEY, DefaultPrefixFeature.Value)
 	Repo.HumanPrefix = strings.TrimSuffix(Repo.Prefix, "/")
+	SizeOfScreen = GetTermSize()
 	return nil
 }
 
@@ -84,7 +86,9 @@ func CommandFeatureAction(context *cli.Context) error {
 }
 func CommandFeatureListAction(context *cli.Context) error {
 	branches := PassthroughThroughPrefixedBranchesWithErrorMessage(context, false)
-
+	fmt.Println(branches)
+	fmt.Println(SizeOfScreen)
+	fmt.Println(GetTermSize())
 	return nil
 }
 func CommandFeatureStartAction(context *cli.Context) error {

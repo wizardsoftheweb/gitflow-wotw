@@ -10,6 +10,8 @@ func BootstrapLogger(verbosity_level int) {
 		FullTimestamp:    true,
 		TimestampFormat:  "2006-01-02 15:04:05",
 		QuoteEmptyFields: true,
+		ForceFormatting:  true,
+		ForceColors:      true,
 	}
 	formatter.SetColorScheme(&prefixed.ColorScheme{
 		PrefixStyle:     "cyan",

@@ -49,7 +49,11 @@ func (r *Repository) RemoteBranches() []string {
 }
 
 func (r *Repository) CurrentBranch() string {
-	return GitCurrentBranchPattern.FindStringSubmatch(BranchNoColor(false).String())
+	results := GitCurrentBranchPattern.FindStringSubmatch(BranchNoColor(false).String())
+	if 1 <= len(results) {
+		logrus.Fatal(ErrCannotDetermineCurrentBranch)
+	}
+	return results[0]
 }
 
 func (r *Repository) HasLocalBranch(needle string) bool {
