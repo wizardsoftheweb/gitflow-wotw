@@ -16,7 +16,7 @@ var (
 )
 
 var (
-	GlobalCliFlagVerbosity *cli.IntFlag
+	GlobalCliFlagVerbosity cli.IntFlag
 )
 
 var (
@@ -49,7 +49,7 @@ func PopulateContext(context *cli.Context) error {
 }
 
 func BootstrapCli(verbosity_level int) *cli.App {
-	GlobalCliFlagVerbosity = &cli.IntFlag{
+	GlobalCliFlagVerbosity = cli.IntFlag{
 		Name:  "verbose, v",
 		Usage: "The more vs the more verbose the logs",
 		Value: verbosity_level,

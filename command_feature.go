@@ -10,8 +10,10 @@ import (
 
 var (
 	CommandFeatureList = cli.Command{
-		Name:   "list",
-		Flags:  []cli.Flag{},
+		Name: "list",
+		Flags: []cli.Flag{
+			GlobalCliFlagVerbosity,
+		},
 		Action: CommandFeatureListAction,
 	}
 	CommandFeatureStart = cli.Command{
@@ -55,8 +57,10 @@ var (
 		Action: CommandFeaturePullAction,
 	}
 	CommandFeature = cli.Command{
-		Name:   "feature",
-		Flags:  []cli.Flag{},
+		Name: "feature",
+		Flags: []cli.Flag{
+			GlobalCliFlagVerbosity,
+		},
 		Action: CommandFeatureAction,
 		Subcommands: cli.Commands{
 			CommandFeatureList,
@@ -86,7 +90,7 @@ func CommandFeatureAction(context *cli.Context) error {
 func CommandFeatureListAction(context *cli.Context) error {
 	branches := PassthroughThroughPrefixedBranchesWithErrorMessage(context, false)
 	var width int
-	if context.Bool("verbose") {
+	if 0 < context.Int("verbose") {
 		for _, branch := range branches {
 			width = MaxInt(width, len(branch))
 		}
@@ -99,7 +103,7 @@ func CommandFeatureListAction(context *cli.Context) error {
 		} else {
 			fmt.Printf("  ")
 		}
-		if context.Bool("verbose") {
+		if 0 < context.Int("verbose") {
 			devBranch := GitConfig.Get(DEV_BRANCH_KEY)
 			base := MergeBase(branchFullname, devBranch)
 			devSha := RevParseArgs(devBranch)
@@ -119,6 +123,7 @@ func CommandFeatureListAction(context *cli.Context) error {
 		} else {
 			fmt.Printf("%s", branch)
 		}
+		fmt.Println()
 	}
 	return nil
 }
