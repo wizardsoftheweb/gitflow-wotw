@@ -26,6 +26,12 @@ var (
 )
 
 var (
+	DefaultMasterSuggestions = []string{
+		"master", "prod", "production", "main",
+	}
+	DefaultDevSuggestions = []string{
+		"develop", "dev", "development", "master",
+	}
 	DefaultBranches = []Option{
 		DefaultBranchDevelopment,
 		DefaultBranchMaster,

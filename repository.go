@@ -45,3 +45,20 @@ func (r *Repository) HasRemoteBranch(needle string) bool {
 	}
 	return false
 }
+
+func (r *Repository) PickGoodMasterSuggestion() string {
+	for _, suggestion := range DefaultMasterSuggestions {
+		if r.HasLocalBranch(suggestion) {
+			return suggestion
+		}
+	}
+	return DefaultBranchMaster.Value
+}
+func (r *Repository) PickGoodDevSuggestion() string {
+	for _, suggestion := range DefaultDevSuggestions {
+		if r.HasLocalBranch(suggestion) {
+			return suggestion
+		}
+	}
+	return DefaultBranchDevelopment.Value
+}
