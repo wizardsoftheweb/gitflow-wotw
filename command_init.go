@@ -9,8 +9,13 @@ import (
 
 var (
 	CommandInit = cli.Command{
-		Name:   "init",
-		Flags:  []cli.Flag{},
+		Name: "init",
+		Flags: []cli.Flag{
+			cli.BoolFlag{
+				Name:  "force, f",
+				Usage: "Forces a reinitialization",
+			},
+		},
 		Action: CommandInitAction,
 	}
 )
@@ -72,10 +77,12 @@ func InitProcedural(context *cli.Context) error {
 			if !Repo.HasLocalBranch(masterName) {
 				if Repo.HasRemoteBranch(masterName) {
 					ExecCmd("git", "branch", masterName, fmt.Sprintf("origin/%s", masterName))
+				} else {
+					logrus.Warn("Master", Repo.HasLocalBranch(masterName))
+					logrus.Warn(fmt.Sprintf("'%s'", masterName))
+					logrus.Error(fmt.Sprintf("Branch '%s' does not exist", masterName))
+					logrus.Fatal(ErrProdDoesntExist)
 				}
-			} else {
-				logrus.Error(fmt.Sprintf("Branch '%s' does not exist"))
-				logrus.Fatal(ErrProdDoesntExist)
 			}
 		}
 		GitConfig.Write(MASTER_BRANCH_KEY, masterName)
