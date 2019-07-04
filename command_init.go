@@ -102,7 +102,7 @@ func ConstructMasterBranchNameSuggestions(context *cli.Context, repo Repository)
 			"branch",
 			"master",
 		)
-		if nil != err {
+		if nil != err && ErrConfigOptionNotFound != err {
 			logrus.Fatal(err)
 		}
 		if "" != value {
@@ -146,7 +146,7 @@ func ConstructDevBranchNameSuggestions(context *cli.Context, repo Repository) er
 			"branch",
 			"dev",
 		)
-		if nil != err {
+		if nil != err && ErrConfigOptionNotFound != err {
 			logrus.Fatal(err)
 		}
 		if "" != value {
@@ -187,8 +187,13 @@ func EnsureDevAndMasterDiffer(dev string, master string) error {
 	return nil
 }
 
-func EnsureHeadExists(context *cli.Context, repo *Repository) error {
-
+func EnsureHeadExists(context *cli.Context, master string) error {
+	verify := execute("git", "rev-parse", "--quiet", "--verify", "HEAD")
+	if !verify.Succeeded() {
+		execute("git", "symbolic-ref", "HEAD", fmt.Sprintf("refs/heads/%s", master))
+		execute("git", "commit", "--allow-empty", "--quiet", "-m", "Initial commit")
+	}
+	return nil
 }
 
 func CommandInitAction(context *cli.Context) error {
@@ -230,5 +235,6 @@ func CommandInitAction(context *cli.Context) error {
 	if nil != err {
 		log.Fatal(err)
 	}
+	EnsureHeadExists(context, master)
 	return nil
 }

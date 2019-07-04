@@ -98,7 +98,7 @@ func (section *GitConfigSection) create(key string, value string) error {
 }
 
 func (section *GitConfigSection) read(key string) (string, error) {
-	logrus.Trace("read")
+	logrus.Trace(fmt.Sprintf("read %s.%s", section.EnvironmentHeader(), key))
 	value, ok := section.Options[key]
 	if !ok {
 		return "", ErrConfigOptionNotFound
@@ -182,6 +182,7 @@ func (config *GitConfig) Option(action GitConfigCrud, components ...string) (str
 	}
 	section, err := config.read(section_name)
 	if nil != err {
+		logrus.Warning(err)
 		log.Fatal(err)
 	}
 
