@@ -57,7 +57,7 @@ var (
 		Name:   "feature",
 		Flags:  []cli.Flag{},
 		Action: CommandFeatureAction,
-		Subcommands: []cli.Commands{
+		Subcommands: cli.Commands{
 			CommandFeatureList,
 			CommandFeatureStart,
 			CommandFeatureFinish,
@@ -75,6 +75,7 @@ var (
 func BeforeFeature(context *cli.Context) error {
 	Repo.Prefix = GitConfig.GetWithDefault(FEATURE_PREFIX_KEY, DefaultPrefixFeature.Value)
 	Repo.HumanPrefix = strings.TrimSuffix(Repo.Prefix, "/")
+	return nil
 }
 
 func CommandFeatureAction(context *cli.Context) error {

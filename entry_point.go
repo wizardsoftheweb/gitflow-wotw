@@ -66,7 +66,6 @@ func BootstrapCli(verbosity_level int) *cli.App {
 		CommandRelease,
 		CommandSupport,
 		CommandVersion,
-		TestCommand,
 	}
 	app.Flags = []cli.Flag{
 		GlobalCliFlagVerbosity,

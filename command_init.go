@@ -119,7 +119,6 @@ func ParsePrefix(context *cli.Context, prefixKey string, defaultValue string) er
 }
 
 func InitProcedural(context *cli.Context) error {
-	logrus.Trace("InitProcedural")
 	if !RevParseGitDir().Succeeded() {
 		GitInit()
 	} else {

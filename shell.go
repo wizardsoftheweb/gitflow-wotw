@@ -26,7 +26,6 @@ func (c CommandResponse) String() string {
 }
 
 func parseExitCode(err error) int {
-	logrus.Debug("parseExitCode")
 	if exiterr, ok := err.(*exec.ExitError); ok {
 		if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
 			return status.ExitStatus()
@@ -36,7 +35,6 @@ func parseExitCode(err error) int {
 }
 
 func ExecCmd(args ...string) CommandResponse {
-	logrus.Debug("ExecCmd")
 	logrus.Trace(args)
 	process := exec.Command(args[0], args[1:]...)
 	combined, err := process.CombinedOutput()

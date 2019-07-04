@@ -31,7 +31,6 @@ func (r *Repository) SpecificPrefixBranches(remote bool) []string {
 }
 
 func (r *Repository) SpecificBranches(remote bool) []string {
-	logrus.Trace("SpecificBranches")
 	branches := []string{}
 	result := BranchNoColor(remote)
 	for _, match := range GitBranchPattern.FindAllStringSubmatch(result.result, -1) {
@@ -41,17 +40,14 @@ func (r *Repository) SpecificBranches(remote bool) []string {
 }
 
 func (r *Repository) LocalBranches() []string {
-	logrus.Trace("LocalBranches")
 	return r.SpecificBranches(false)
 }
 
 func (r *Repository) RemoteBranches() []string {
-	logrus.Trace("RemoteBranches")
 	return r.SpecificBranches(true)
 }
 
 func (r *Repository) HasLocalBranch(needle string) bool {
-	logrus.Trace("HasLocalBranch")
 	for _, branch := range r.LocalBranches() {
 		if needle == branch {
 			return true
@@ -61,7 +57,6 @@ func (r *Repository) HasLocalBranch(needle string) bool {
 }
 
 func (r *Repository) HasRemoteBranch(needle string) bool {
-	logrus.Trace("HasRemoteBranch")
 	for _, branch := range r.RemoteBranches() {
 		if needle == branch {
 			return true
