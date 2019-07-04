@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"regexp"
 	"strings"
@@ -75,11 +74,11 @@ func BootstrapCli(verbosity_level int) *cli.App {
 	return app
 }
 
-func main() {
-	sanitized_args, verbosity_level := CheckVerbosity(os.Args)
-	app := BootstrapCli(verbosity_level)
-	err := app.Run(sanitized_args)
-	if nil != err {
-		log.Fatal(err)
-	}
-}
+// func main() {
+// 	sanitized_args, verbosity_level := CheckVerbosity(os.Args)
+// 	app := BootstrapCli(verbosity_level)
+// 	err := app.Run(sanitized_args)
+// 	if nil != err {
+// 		log.Fatal(err)
+// 	}
+// }

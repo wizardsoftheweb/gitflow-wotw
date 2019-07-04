@@ -240,7 +240,7 @@ func CheckSinglePrefix(context *cli.Context, repo *Repository, prefix string) {
 func CheckVersion(context *cli.Context, repo *Repository) {
 	existingValue, _ := repo.config.Option(GIT_CONFIG_READ, "gitflow", "prefix", "versiontag")
 	if "" == existingValue {
-		existingValue = fmt.Sprintf("%s", prefix)
+		existingValue = fmt.Sprintf("%s", DefaultGitflowPrefixVersiontagOption.Value)
 	} else {
 		if !context.Bool("force") {
 			return
