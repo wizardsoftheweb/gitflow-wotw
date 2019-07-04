@@ -117,7 +117,7 @@ func ConstructMasterBranchNameSuggestions(context *cli.Context, repo Repository)
 	return nil
 }
 
-func BuildMasterBranch(context *cli.Context, repo *Repository) error {
+func BuildMasterBranch(context *cli.Context, repo *Repository) string {
 	master := PromptForBranchName(
 		fmt.Sprintf("Branch name for prod [%s]", ActiveCommandInitState.MasterDefaultSuggestion),
 	)
@@ -132,7 +132,7 @@ func BuildMasterBranch(context *cli.Context, repo *Repository) error {
 			logrus.Warning(fmt.Sprintf("The chosen master branch %s does not exist locally", master))
 		}
 	}
-	return nil
+	return master
 }
 
 func ConstructDevBranchNameSuggestions(context *cli.Context, repo Repository) error {
@@ -161,7 +161,7 @@ func ConstructDevBranchNameSuggestions(context *cli.Context, repo Repository) er
 	return nil
 }
 
-func BuildDevBranch(context *cli.Context, repo *Repository) error {
+func BuildDevBranch(context *cli.Context, repo *Repository) string {
 	dev := PromptForBranchName(
 		fmt.Sprintf("Branch name for dev [%s]", ActiveCommandInitState.DevDefaultSuggestion),
 	)
@@ -176,7 +176,7 @@ func BuildDevBranch(context *cli.Context, repo *Repository) error {
 			logrus.Warning(fmt.Sprintf("The chosen dev branch %s does not exist locally", dev))
 		}
 	}
-	return nil
+	return dev
 }
 
 func CommandInitAction(context *cli.Context) error {
@@ -199,12 +199,12 @@ func CommandInitAction(context *cli.Context) error {
 	master := CheckInitialization(context, &repo, "master")
 	if "" == master {
 		ConstructMasterBranchNameSuggestions(context, repo)
-		BuildMasterBranch(context, &repo)
+		master = BuildMasterBranch(context, &repo)
 	}
 	dev := CheckInitialization(context, &repo, "dev")
 	if "" == dev {
 		ConstructDevBranchNameSuggestions(context, repo)
-		BuildDevBranch(context, &repo)
+		dev = BuildDevBranch(context, &repo)
 	}
 	return nil
 }
