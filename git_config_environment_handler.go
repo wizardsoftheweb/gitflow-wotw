@@ -28,10 +28,10 @@ func (handler *ConfigEnvironmentHandler) loadConfig() error {
 	return nil
 }
 
-func (handler *ConfigEnvironmentHandler) parseConfig() (GitConfig, error) {
+func (handler *ConfigEnvironmentHandler) parseConfig() (*GitConfig, error) {
 	logrus.Trace("parseConfig")
-	config := GitConfig{
-		Sections: make(map[string]GitConfigSection),
+	config := &GitConfig{
+		Options: make(map[string]*GitOption),
 	}
 	for _, match := range GitConfigEnvironmentLinePattern.FindAllStringSubmatch(handler.rawContents, -1) {
 		result := map[string]string{}
@@ -53,21 +53,17 @@ func (handler *ConfigEnvironmentHandler) parseConfig() (GitConfig, error) {
 	return config, nil
 }
 
-func (handler *ConfigEnvironmentHandler) dumpConfig(config GitConfig) []string {
+func (handler *ConfigEnvironmentHandler) dumpConfig(config *GitConfig) []string {
 	logrus.Trace("dumpConfig")
 	lines := []string{}
-	for _, section := range config.Sections {
-		for key, value := range section.Options {
-			lines = append(
-				lines,
-				fmt.Sprintf(
-					"%s.%s=%s",
-					section.EnvironmentHeader(),
-					key,
-					value,
-				),
-			)
+	for _, option := range config.Options {
+		var section string
+		if "" != option.Subsection {
+			section = FormatGitConfigSectionEnvironmentName(option.Section, option.Subsection)
+		} else {
+			section = FormatGitConfigSectionEnvironmentName(option.Section)
 		}
+		lines = append(lines, fmt.Sprintf("%s.%s = %s", section, option.Key, option.Value))
 	}
 	return lines
 }

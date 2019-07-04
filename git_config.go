@@ -3,7 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
+	"sort"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 )
@@ -19,6 +20,12 @@ type ConfigStorageHandler struct {
 	rawContents string
 }
 
+type OptionKeyStore map[string]string
+
+var (
+	OptionKeyCache = make(OptionKeyStore)
+)
+
 type GitConfigCrud int
 
 const (
@@ -28,12 +35,97 @@ const (
 	GIT_CONFIG_DELETE
 )
 
-type GitConfigOptions map[string]string
+type GitOption struct {
+	Section    string
+	Subsection string
+	Key        string
+	Value      string
+}
 
-type GitConfigSection struct {
-	Heading    string
-	Subheading string
-	Options    GitConfigOptions
+func NewGitOption(arguments ...string) *GitOption {
+	newOption := &GitOption{}
+	newOption.Value, arguments = arguments[len(arguments)-1], arguments[:len(arguments)-1]
+	newOption.Key, arguments = arguments[len(arguments)-1], arguments[:len(arguments)-1]
+	newOption.Section, arguments = arguments[0], arguments[1:]
+	if 1 == len(arguments) {
+		newOption.Subsection = arguments[0]
+	}
+	return newOption
+}
+
+type GitConfig struct {
+	Options map[string]*GitOption
+}
+
+func GenerateOptionName(arguments ...string) string {
+	logrus.Trace("GenerateOptionName")
+	args := fmt.Sprintf("%s", arguments)
+	name, ok := OptionKeyCache[args]
+	if !ok {
+		name = strings.Join(arguments, ".")
+		OptionKeyCache[args] = name
+	}
+	return name
+}
+
+func (config *GitConfig) create(arguments ...string) (string, error) {
+	key := GenerateOptionName(arguments[:len(arguments)-1]...)
+	value := NewGitOption(arguments...)
+	config.Options[key] = value
+	return "", nil
+
+}
+
+func (config *GitConfig) read(arguments ...string) (string, error) {
+	key := GenerateOptionName(arguments...)
+	value, ok := config.Options[key]
+	if !ok {
+		return "", ErrConfigOptionNotFound
+	}
+	return value.Value, nil
+}
+
+func (config *GitConfig) update(arguments ...string) (string, error) {
+	key := GenerateOptionName(arguments[:len(arguments)-1]...)
+	value := NewGitOption(arguments...)
+	config.Options[key] = value
+	return "", nil
+}
+
+func (config *GitConfig) delete(arguments ...string) (string, error) {
+	key := GenerateOptionName(arguments...)
+	delete(config.Options, key)
+	return "", nil
+}
+
+func (config *GitConfig) Option(action GitConfigCrud, arguments ...string) (string, error) {
+	logrus.Trace("Option")
+	switch action {
+	case GIT_CONFIG_CREATE:
+		logrus.Debug(fmt.Sprintf("%s: %s", "create", arguments))
+		return config.create(arguments...)
+	case GIT_CONFIG_READ:
+		logrus.Debug(fmt.Sprintf("%s: %s", "read", arguments))
+		return config.read(arguments...)
+	case GIT_CONFIG_UPDATE:
+		logrus.Debug(fmt.Sprintf("%s: %s", "update", arguments))
+		return config.update(arguments...)
+	case GIT_CONFIG_DELETE:
+		logrus.Debug(fmt.Sprintf("%s: %s", "delete", arguments))
+		return config.delete(arguments...)
+	}
+	return "", nil
+}
+
+func (config *GitConfig) SortKeys() []string {
+	keys := make([]string, len(config.Options))
+	index := 0
+	for key, _ := range config.Options {
+		keys[index] = key
+		index++
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 type SectionHeaderFormats int
@@ -73,138 +165,4 @@ func FormatGitConfigSectionEnvironmentName(components ...string) string {
 		return fmt.Sprintf(GitConfigSectionEnvironmentFormats[HEADER_WITH_SUBHEADING], components[0], components[1])
 	}
 	return fmt.Sprintf(GitConfigSectionEnvironmentFormats[HEADER_WITHOUT], components[0])
-}
-
-func (section *GitConfigSection) FileHeader() string {
-	logrus.Trace("FileHeader")
-	if 0 < len(section.Subheading) {
-		return FormatGitConfigSectionFileName(section.Heading, section.Subheading)
-	}
-	return FormatGitConfigSectionFileName(section.Heading)
-}
-
-func (section *GitConfigSection) EnvironmentHeader() string {
-	logrus.Trace("EnvironmentHeader")
-	if 0 < len(section.Subheading) {
-		return FormatGitConfigSectionEnvironmentName(section.Heading, section.Subheading)
-	}
-	return FormatGitConfigSectionEnvironmentName(section.Heading)
-}
-
-func (section *GitConfigSection) create(key string, value string) error {
-	logrus.Trace("create")
-	section.Options[key] = value
-	return nil
-}
-
-func (section *GitConfigSection) read(key string) (string, error) {
-	logrus.Trace(fmt.Sprintf("read %s.%s", section.EnvironmentHeader(), key))
-	value, ok := section.Options[key]
-	if !ok {
-		return "", ErrConfigOptionNotFound
-	}
-	return value, nil
-}
-
-func (section *GitConfigSection) update(key string, value string) error {
-	logrus.Trace("update")
-	section.Options[key] = value
-	return nil
-}
-
-func (section *GitConfigSection) delete(key string) error {
-	logrus.Trace("delete")
-	delete(section.Options, key)
-	return nil
-}
-
-type GitConfig struct {
-	Sections map[string]GitConfigSection
-}
-
-func (config *GitConfig) create(new_config GitConfigSection) error {
-	logrus.Trace("create")
-	config.Sections[new_config.FileHeader()] = new_config
-	return nil
-}
-
-func (config *GitConfig) read(components ...string) (GitConfigSection, error) {
-	logrus.Trace("read")
-	value, ok := config.Sections[FormatGitConfigSectionFileName(components...)]
-	if !ok {
-		value, ok = config.Sections[components[0]]
-		if !ok {
-			return GitConfigSection{}, ErrConfigSectionNotFound
-		}
-	}
-	return value, nil
-}
-
-func (config *GitConfig) update(key string, value GitConfigSection) error {
-	logrus.Trace("update")
-	config.Sections[key] = value
-	return nil
-}
-
-func (config *GitConfig) delete(key string) error {
-	logrus.Trace("delete")
-	delete(config.Sections, key)
-	return nil
-}
-
-func (config *GitConfig) Option(action GitConfigCrud, components ...string) (string, error) {
-	logrus.Trace("Option")
-	var section_name string
-	var key, value int
-	if 4 == len(components) {
-		section_name = FormatGitConfigSectionFileName(components[0], components[1])
-		key = 2
-		value = 3
-		_, err := config.read(section_name)
-		if nil != err {
-			config.create(GitConfigSection{
-				Heading:    components[0],
-				Subheading: components[1],
-				Options:    make(map[string]string),
-			})
-		}
-	} else {
-		section_name = FormatGitConfigSectionFileName(components[0])
-		key = 1
-		value = 2
-		_, err := config.read(section_name)
-		if nil != err {
-			config.create(GitConfigSection{
-				Heading: components[0],
-				Options: make(map[string]string),
-			})
-		}
-	}
-	section, err := config.read(section_name)
-	if nil != err {
-		logrus.Warning(err)
-		log.Fatal(err)
-	}
-
-	switch {
-	case GIT_CONFIG_CREATE == action && 3 <= len(components):
-		return "", section.create(
-			components[key],
-			components[value],
-		)
-	case GIT_CONFIG_READ == action:
-		return section.read(
-			components[key],
-		)
-	case GIT_CONFIG_UPDATE == action && 3 <= len(components):
-		return "", section.update(
-			components[key],
-			components[value],
-		)
-	case GIT_CONFIG_DELETE == action:
-		return "", section.delete(
-			components[key],
-		)
-	}
-	return "", ErrUnableToProcessCrudRequest
 }

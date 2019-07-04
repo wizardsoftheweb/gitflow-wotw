@@ -181,13 +181,6 @@ func BuildDevBranch(context *cli.Context, repo *Repository, master string) strin
 	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "dev"))
 	if ActiveCommandInitState.DevExistenceCheck {
 		if !repo.DoesBranchExistLocally(dev) {
-			devMaster := fmt.Sprintf("origin/%s", dev)
-			if repo.DoesBranchExistRemotely(devMaster) {
-				execute("git", "branch", dev, devMaster)
-			} else {
-				execute("git", "branch", "--no-track", dev, master)
-			}
-		} else {
 			logrus.Warning(fmt.Sprintf("The chosen dev branch %s does not exist locally", dev))
 		}
 	}
@@ -212,11 +205,16 @@ func EnsureHeadExists(context *cli.Context, master string) error {
 	return nil
 }
 
-func EnsureDevExists(context *cli.Context, repo *Repository, dev string) error {
+func EnsureDevExists(context *cli.Context, repo *Repository, dev string, master string) error {
 
 	logrus.Trace("EnsureDevExists")
 	if !repo.DoesBranchExistLocally(dev) {
-
+		devMaster := fmt.Sprintf("origin/%s", dev)
+		if repo.DoesBranchExistRemotely(devMaster) {
+			execute("git", "branch", dev, devMaster)
+		} else {
+			execute("git", "branch", "--no-track", dev, master)
+		}
 	}
 	return nil
 }
@@ -235,8 +233,8 @@ func CommandInitAction(context *cli.Context) error {
 	if nil != err {
 		log.Fatal(err)
 	}
-	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "master"))
-	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "dev"))
+	logrus.Warning(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "master"))
+	logrus.Warning(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "dev"))
 	if context.Bool("default") {
 		logrus.Info("Using default branches")
 	}
@@ -272,6 +270,7 @@ func CommandInitAction(context *cli.Context) error {
 	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "master"))
 	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "dev"))
 	EnsureHeadExists(context, master)
+	EnsureDevExists(context, &repo, dev, master)
 	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "master"))
 	logrus.Debug(repo.config.Option(GIT_CONFIG_READ, "gitflow", "branch", "dev"))
 	if !repo.HasBranchBeenConfigured(master) && !repo.HasBranchBeenConfigured(dev) {
