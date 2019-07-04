@@ -1,4 +1,4 @@
-package main
+package gitflow
 
 import (
 	"fmt"
@@ -17,13 +17,13 @@ var (
 func (g *GitConfigHelper) Get(key string) string {
 	logrus.Trace(fmt.Sprintf("Get: %s", key))
 	result := ExecCmd("git", "config", "--get", key)
-	return strings.TrimSpace(result.result)
+	return strings.TrimSpace(main.result)
 }
 
 func (g *GitConfigHelper) GetWithDefault(key string, defaultValue string) string {
 	logrus.Trace(fmt.Sprintf("Get: %s", key))
 	result := ExecCmd("git", "config", "--get", key)
-	parsed := strings.TrimSpace(result.result)
+	parsed := strings.TrimSpace(main.result)
 	if "" == parsed {
 		return defaultValue
 	}

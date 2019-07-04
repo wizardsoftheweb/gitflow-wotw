@@ -1,4 +1,4 @@
-package main
+package gitflow
 
 import (
 	"github.com/sirupsen/logrus"

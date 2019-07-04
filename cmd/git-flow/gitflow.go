@@ -1,4 +1,4 @@
-package cmd
+package gitflow
 
 import (
 	"github.com/spf13/cobra"

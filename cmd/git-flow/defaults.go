@@ -1,4 +1,4 @@
-package main
+package gitflow
 
 const (
 	MASTER_BRANCH_KEY  = "gitflow.branch.master"

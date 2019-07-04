@@ -1,4 +1,4 @@
-package main
+package gitflow
 
 import (
 	"fmt"
@@ -78,8 +78,8 @@ var (
 )
 
 func BeforeFeature(context *cli.Context) error {
-	Repo.Prefix = GitConfig.GetWithDefault(FEATURE_PREFIX_KEY, DefaultPrefixFeature.Value)
-	Repo.HumanPrefix = strings.TrimSuffix(Repo.Prefix, "/")
+	main.Prefix = GetWithDefault(FEATURE_PREFIX_KEY, Value)
+	main.HumanPrefix = strings.TrimSuffix(main.Prefix, "/")
 	return nil
 }
 
@@ -97,14 +97,14 @@ func CommandFeatureListAction(context *cli.Context) error {
 		width += 3
 	}
 	for _, branch := range branches {
-		branchFullname := fmt.Sprintf("%s%s", Repo.Prefix, branch)
-		if Repo.CurrentBranch() == branchFullname {
+		branchFullname := fmt.Sprintf("%s%s", main.Prefix, branch)
+		if main.CurrentBranch() == branchFullname {
 			fmt.Printf("* ")
 		} else {
 			fmt.Printf("  ")
 		}
 		if 0 < context.Int("verbose") {
-			devBranch := GitConfig.Get(DEV_BRANCH_KEY)
+			devBranch := Get(DEV_BRANCH_KEY)
 			base := MergeBase(branchFullname, devBranch)
 			devSha := RevParseArgs(devBranch)
 			branchSha := RevParseArgs(branchFullname)

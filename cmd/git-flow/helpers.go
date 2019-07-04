@@ -1,4 +1,4 @@
-package main
+package gitflow
 
 import (
 	"fmt"
@@ -8,20 +8,20 @@ import (
 
 func IsWorkingTreeClean() bool {
 	result := ExecCmd("git", "diff", "--no-ext-diff", "--ignore-submodules", "--quiet", "--exit-code")
-	if !result.Succeeded() {
+	if !main.Succeeded() {
 		logrus.Fatal(ErrUnstagedChanges)
 	}
 	result = ExecCmd("git", "diff-index", "--cached", "--quiet", "--ignore-submodules", "HEAD", "--")
-	if !result.Succeeded() {
+	if !main.Succeeded() {
 		logrus.Fatal(ErrIndexUncommitted)
 	}
 	return true
 }
 
 func IsBranchConfigured(name string) bool {
-	branchName := GitConfig.Get(fmt.Sprintf("gitflow.branch.%s", name))
+	branchName := Get(fmt.Sprintf("gitflow.branch.%s", name))
 	logrus.Trace(branchName)
-	return "" != branchName && Repo.HasLocalBranch(branchName)
+	return "" != branchName && main.HasLocalBranch(branchName)
 }
 
 func IsMasterConfigured() bool {
@@ -33,14 +33,14 @@ func IsDevConfigured() bool {
 }
 
 func AreMasterAndDevTheSameValue() bool {
-	masterName := GitConfig.Get("gitflow.branch.master")
-	devName := GitConfig.Get("gitflow.branch.dev")
+	masterName := Get("gitflow.branch.master")
+	devName := Get("gitflow.branch.dev")
 	return "" != masterName && "" != devName && masterName != devName
 }
 
 func ArePrefixesConfigured() bool {
 	for _, option := range DefaultPrefixes {
-		result := GitConfig.Get(option.Key)
+		result := Get(Key)
 		if "" == result {
 			return false
 		} else {
