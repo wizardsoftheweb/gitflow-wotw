@@ -20,7 +20,6 @@ var (
 )
 
 var (
-	repo            Repository
 	GITFLOW_VERSION = "0.0.0"
 )
 
@@ -72,6 +71,10 @@ func BootstrapCli(verbosity_level int) *cli.App {
 		GlobalCliFlagVerbosity,
 	}
 	app.Before = PopulateContext
+	app.After = func(context *cli.Context) error {
+		IsWorkingTreeClean()
+		return nil
+	}
 	return app
 }
 
@@ -81,11 +84,10 @@ func CheckError(err error) {
 	}
 }
 
-// func main() {
-// 	sanitized_args, verbosity_level := CheckVerbosity(os.Args)
-// 	app := BootstrapCli(verbosity_level)
-// 	err := app.Run(sanitized_args)
-// 	if nil != err {
-// 		log.Fatal(err)
-// 	}
-// }
+func main() {
+	sanitized_args, verbosity_level := CheckVerbosity(os.Args)
+	verbosity_level = 10
+	app := BootstrapCli(verbosity_level)
+	err := app.Run(sanitized_args)
+	CheckError(err)
+}
