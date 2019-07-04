@@ -56,6 +56,14 @@ func (r *Repository) HasRemoteBranch(needle string) bool {
 	return false
 }
 
+func (r *Repository) PickGoodSuggestion(branchName string) string {
+	if "master" == branchName {
+		return r.PickGoodMasterSuggestion()
+	} else {
+		return r.PickGoodDevSuggestion()
+	}
+}
+
 func (r *Repository) PickGoodMasterSuggestion() string {
 	logrus.Trace("PickGoodMasterSuggestion")
 	for _, suggestion := range DefaultMasterSuggestions {
@@ -65,8 +73,9 @@ func (r *Repository) PickGoodMasterSuggestion() string {
 	}
 	return DefaultBranchMaster.Value
 }
-func (r *Repository) PickGoodDevSuggestion(newMaster string) string {
+func (r *Repository) PickGoodDevSuggestion() string {
 	logrus.Trace("PickGoodDevSuggestion")
+	newMaster := GitConfig.Get(MASTER_BRANCH_KEY)
 	for _, suggestion := range DefaultDevSuggestions {
 		if suggestion != newMaster && r.HasLocalBranch(suggestion) {
 			return suggestion
