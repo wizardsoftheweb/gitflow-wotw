@@ -25,4 +25,11 @@ func init() {
 		false,
 		"Use defaults everywhere",
 	)
+	InitCmd.Flags().BoolVarP(
+		&Force,
+		"force",
+		"f",
+		false,
+		"Force reinitialization",
+	)
 }
