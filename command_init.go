@@ -9,30 +9,33 @@ import (
 
 var (
 	CommandInit = cli.Command{
-		Name:   "release",
+		Name:   "init",
 		Flags:  []cli.Flag{},
 		Action: CommandInitAction,
 	}
 )
 
 func InitProcedural(context *cli.Context) error {
+	logrus.Trace("InitProcedural")
 	result := RevParseGitDir()
 	if !result.Succeeded() {
 		GitInit()
 	} else {
 		result = RevParseQuietVerifyHead()
-		if !result.Succeeded() {
+		if result.Succeeded() {
 			IsWorkingTreeClean()
 		} else {
 			logrus.Fatal(ErrHeadlessRepo)
 		}
 	}
+	logrus.Trace("Repo has be identified")
 	if IsGitFlowInitialized() && !context.Bool("force") {
 		logrus.Fatal(ErrAlreadyInitialized)
 	}
 	if context.Bool("default") {
-		fmt.Fprint(context.App.Writer, "Using default branch names\n")
+		fmt.Fprint(context.App.Writer, "Using default branch names")
 	}
+	logrus.Trace("Checking master")
 	var masterName string
 	if IsMasterConfigured() && !context.Bool("force") {
 		masterName = GitConfig.Get(MASTER_BRANCH_KEY)
@@ -40,7 +43,7 @@ func InitProcedural(context *cli.Context) error {
 		var check_existence bool
 		var suggestion string
 		if 0 == len(Repo.LocalBranches()) {
-			fmt.Fprint(context.App.Writer, "No branches exist; creating now\n")
+			fmt.Fprint(context.App.Writer, "No branches exist; creating now")
 			check_existence = false
 			value := GitConfig.Get(MASTER_BRANCH_KEY)
 			if "" == value {
@@ -49,7 +52,7 @@ func InitProcedural(context *cli.Context) error {
 				suggestion = value
 			}
 		} else {
-			fmt.Fprint(context.App.Writer, "Which branch should be used for production?\n")
+			fmt.Fprint(context.App.Writer, "Which branch should be used for production?")
 			localBranches := Repo.LocalBranches()
 			for _, branch := range localBranches {
 				fmt.Fprintf(context.App.Writer, "\t-%s", branch)
@@ -77,13 +80,15 @@ func InitProcedural(context *cli.Context) error {
 		}
 		GitConfig.Write(MASTER_BRANCH_KEY, masterName)
 	}
+	logrus.Trace("Checking dev")
 	var devName string
 	if IsDevConfigured() && !context.Bool("force") {
+		logrus.Trace("Skipping dev")
 		devName = GitConfig.Get(DEV_BRANCH_KEY)
 	} else {
-
 		var check_existence bool
 		var suggestion string
+		logrus.Trace("Checking the branch count")
 		if 0 == len(Repo.LocalBranches()) {
 			check_existence = false
 			value := GitConfig.Get(DEV_BRANCH_KEY)
@@ -92,17 +97,20 @@ func InitProcedural(context *cli.Context) error {
 			} else {
 				suggestion = value
 			}
+			logrus.Trace(fmt.Sprintf("Ran with %s", suggestion))
 		} else {
-			fmt.Fprint(context.App.Writer, "Which branch should be used for development?\n")
+			fmt.Fprint(context.App.Writer, "Which branch should be used for development?")
 			localBranches := Repo.LocalBranches()
+			logrus.Trace(localBranches)
 			for _, branch := range localBranches {
 				if masterName == branch {
 					continue
 				}
-				fmt.Fprintf(context.App.Writer, "\t-%s", branch)
+				fmt.Fprint(context.App.Writer, "\t-%s", branch)
 			}
 			check_existence = true
 			suggestion = Repo.PickGoodDevSuggestion(masterName)
+			logrus.Trace(suggestion)
 			if "" == suggestion {
 				check_existence = false
 				value := GitConfig.Get(DEV_BRANCH_KEY)
@@ -113,7 +121,7 @@ func InitProcedural(context *cli.Context) error {
 				}
 			}
 		}
-		devName := PromptForInput(
+		devName = PromptForInput(
 			REF_NAME_VALIDATION,
 			fmt.Sprintf(
 				"Branch name for dev [%s]",
@@ -121,6 +129,7 @@ func InitProcedural(context *cli.Context) error {
 			),
 			suggestion,
 		)
+		GitConfig.Write(DEV_BRANCH_KEY, devName)
 		if devName == masterName {
 			logrus.Fatal(ErrProductionMustDifferFromDevelopment)
 		}
@@ -145,7 +154,7 @@ func InitProcedural(context *cli.Context) error {
 		}
 		createdBranch = true
 	}
-	if !IsGitFlowInitialized() {
+	if !IsMasterConfigured() || !IsDevConfigured() {
 		logrus.Fatal(ErrUnableToConfigure)
 	}
 	if createdBranch {
@@ -153,10 +162,11 @@ func InitProcedural(context *cli.Context) error {
 	}
 
 	if context.Bool("force") || !ArePrefixesConfigured() {
-		fmt.Fprint(context.App.Writer, "Some prefixes need to be configured\n")
+		fmt.Fprint(context.App.Writer, "Some prefixes need to be configured")
 		for _, prefix := range DefaultPrefixes {
 			value := GitConfig.Get(prefix.Key)
 			defaultValue := value
+			logrus.Trace(fmt.Sprintf("'%s'", value))
 			if context.Bool("force") || "" == value {
 				var newValue string
 				if context.Bool("default") {
@@ -171,6 +181,7 @@ func InitProcedural(context *cli.Context) error {
 						defaultValue,
 					)
 				}
+				logrus.Trace(prefix.Key, newValue)
 				GitConfig.Write(prefix.Key, newValue)
 			}
 		}
@@ -191,6 +202,7 @@ func InitProcedural(context *cli.Context) error {
 						defaultValue,
 					)
 				}
+				logrus.Trace(prefix.Key, newValue)
 				GitConfig.Write(prefix.Key, newValue)
 			}
 		}
@@ -200,5 +212,5 @@ func InitProcedural(context *cli.Context) error {
 
 func CommandInitAction(context *cli.Context) error {
 	logrus.Debug("CommandInitAction")
-	return nil
+	return InitProcedural(context)
 }

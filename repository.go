@@ -1,6 +1,14 @@
 package main
 
-import "strings"
+import (
+	"regexp"
+
+	"github.com/sirupsen/logrus"
+)
+
+var (
+	GitBranchPattern = regexp.MustCompile(`(?m)^.*?(\w.*)\s*?`)
+)
 
 type Repository struct{}
 
@@ -9,26 +17,27 @@ var (
 )
 
 func (r *Repository) SpecificBranches(remote bool) []string {
+	logrus.Trace("SpecificBranches")
 	branches := []string{}
 	result := BranchNoColor(remote)
-	for _, branch := range strings.Split(result.result, `\n`) {
-		branches = append(
-			branches,
-			strings.TrimSpace(strings.TrimPrefix(branch, `*`)),
-		)
+	for _, match := range GitBranchPattern.FindAllStringSubmatch(result.result, -1) {
+		branches = append(branches, match[1])
 	}
 	return branches
 }
 
 func (r *Repository) LocalBranches() []string {
+	logrus.Trace("LocalBranches")
 	return r.SpecificBranches(false)
 }
 
 func (r *Repository) RemoteBranches() []string {
+	logrus.Trace("RemoteBranches")
 	return r.SpecificBranches(true)
 }
 
 func (r *Repository) HasLocalBranch(needle string) bool {
+	logrus.Trace("HasLocalBranch")
 	for _, branch := range r.LocalBranches() {
 		if needle == branch {
 			return true
@@ -38,6 +47,7 @@ func (r *Repository) HasLocalBranch(needle string) bool {
 }
 
 func (r *Repository) HasRemoteBranch(needle string) bool {
+	logrus.Trace("HasRemoteBranch")
 	for _, branch := range r.RemoteBranches() {
 		if needle == branch {
 			return true
@@ -47,6 +57,7 @@ func (r *Repository) HasRemoteBranch(needle string) bool {
 }
 
 func (r *Repository) PickGoodMasterSuggestion() string {
+	logrus.Trace("PickGoodMasterSuggestion")
 	for _, suggestion := range DefaultMasterSuggestions {
 		if r.HasLocalBranch(suggestion) {
 			return suggestion
@@ -55,10 +66,11 @@ func (r *Repository) PickGoodMasterSuggestion() string {
 	return DefaultBranchMaster.Value
 }
 func (r *Repository) PickGoodDevSuggestion(newMaster string) string {
+	logrus.Trace("PickGoodDevSuggestion")
 	for _, suggestion := range DefaultDevSuggestions {
 		if suggestion != newMaster && r.HasLocalBranch(suggestion) {
 			return suggestion
 		}
 	}
-	return DefaultBranchDevelopment.Value
+	return ""
 }

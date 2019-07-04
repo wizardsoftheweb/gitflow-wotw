@@ -85,7 +85,7 @@ func CheckError(err error) {
 
 func main() {
 	sanitized_args, verbosity_level := CheckVerbosity(os.Args)
-	verbosity_level = 10
+	verbosity_level = 3
 	app := BootstrapCli(verbosity_level)
 	err := app.Run(sanitized_args)
 	CheckError(err)

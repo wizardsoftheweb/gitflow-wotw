@@ -20,7 +20,9 @@ func IsWorkingTreeClean() bool {
 }
 
 func IsBranchConfigured(name string) bool {
+	logrus.Trace("IsBranchConfigured")
 	branchName := GitConfig.Get(fmt.Sprintf("gitflow.branch.%s", name))
+	logrus.Trace(branchName)
 	return "" != branchName && Repo.HasLocalBranch(branchName)
 }
 
@@ -39,9 +41,13 @@ func AreMasterAndDevTheSameValue() bool {
 }
 
 func ArePrefixesConfigured() bool {
+	logrus.Trace("ArePrefixesConfigured")
 	for _, option := range DefaultPrefixes {
-		if "" == GitConfig.Get(option.Key) {
+		result := GitConfig.Get(option.Key)
+		if "" == result {
 			return false
+		} else {
+			logrus.Trace(result)
 		}
 	}
 	return true

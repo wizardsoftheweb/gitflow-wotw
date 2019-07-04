@@ -32,7 +32,6 @@ func ExecCmd(args ...string) CommandResponse {
 	logrus.Trace(args)
 	process := exec.Command(args[0], args[1:]...)
 	combined, err := process.CombinedOutput()
-	CheckError(err)
 	return CommandResponse{
 		result:   string(combined),
 		exitCode: parseExitCode(err),

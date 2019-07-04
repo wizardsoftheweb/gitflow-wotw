@@ -2,7 +2,7 @@ package main
 
 const (
 	MASTER_BRANCH_KEY  = "gitflow.branch.master"
-	DEV_BRANCH_KEY     = "gitflow.branches.development"
+	DEV_BRANCH_KEY     = "gitflow.branch.dev"
 	FEATURE_PREFIX_KEY = "gitflow.prefix.feature"
 	RELEASE_PREFIX_KEY = "gitflow.prefix.release"
 	HOTFIX_PREFIX_KEY  = "gitflow.prefix.hotfix"
