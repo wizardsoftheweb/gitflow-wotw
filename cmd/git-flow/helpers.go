@@ -13,7 +13,7 @@ func CheckErr(err error) {
 }
 
 func IsWorkingTreeClean() bool {
-	if ExecCmd("git", "diff", "--no-ext-diff", "--ignore-submodules", "--quiet", "--exit-code").Succeeded() {
+	if !ExecCmd("git", "diff", "--no-ext-diff", "--ignore-submodules", "--quiet", "--exit-code").Succeeded() {
 		logrus.Fatal(ErrUnstagedChanges)
 	}
 	if !ExecCmd("git", "diff-index", "--cached", "--quiet", "--ignore-submodules", "HEAD", "--").Succeeded() {

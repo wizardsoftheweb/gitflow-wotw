@@ -10,7 +10,7 @@ var PackageCmd = &cobra.Command{
 	Use:              "git-flow",
 	TraverseChildren: true,
 	Version:          PackageVersion,
-	PreRun: func(cmd *cobra.Command, args []string) {
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		BootstrapLogger(VerbosityFlagValue)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
