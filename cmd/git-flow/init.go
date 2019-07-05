@@ -12,7 +12,7 @@ var InitCmd = &cobra.Command{
 	Use:              "init",
 	TraverseChildren: true,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("wat")
+		InitProcedural()
 	},
 }
 
@@ -53,7 +53,7 @@ func GetValueFromRef(branch string) string {
 	return "dev"
 }
 
-func SharedPrep(cmd *cobra.Command, args []string, branchName string) error {
+func SharedPrep(branchName string) error {
 	if Force || !IsBranchConfigured(branchName) {
 		var checkExistence bool
 		var suggestion string
@@ -68,7 +68,7 @@ func SharedPrep(cmd *cobra.Command, args []string, branchName string) error {
 				suggestion = GitConfig.GetWithDefault(GetKeyFromRef(branchName), GetValueFromRef(branchName))
 			}
 		}
-		newValue := PromptForInput(REF_NAME_VALIDATION, PromptMessageFromBranch(branchName, suggestion), suggestion)
+		newValue := PromptForInput(RefNameValidation, PromptMessageFromBranch(branchName, suggestion), suggestion)
 		GitConfig.Write(GetKeyFromRef(branchName), newValue)
 		if checkExistence {
 			CheckExistence(branchName, newValue)
@@ -134,7 +134,7 @@ func ParsePrefix(prefixKey string, defaultValue string) error {
 	return nil
 }
 
-func InitProcedural(cmd *cobra.Command, args []string) error {
+func InitProcedural() {
 	if !RevParseGitDir().Succeeded() {
 		GitInit()
 	} else {
@@ -152,7 +152,7 @@ func InitProcedural(cmd *cobra.Command, args []string) error {
 		fmt.Println("Using default branch names")
 	}
 	for _, branchName := range []string{"master", "dev"} {
-		err := SharedPrep(cmd, args, branchName)
+		err := SharedPrep(branchName)
 		CheckErr(err)
 	}
 	devName := GitConfig.Get(DevBranchKey)
@@ -184,7 +184,7 @@ func InitProcedural(cmd *cobra.Command, args []string) error {
 	if Force || !ArePrefixesConfigured() {
 		fmt.Println("Some prefixes need to be configured")
 		for _, prefix := range DefaultPrefixes {
-			err := ParsePrefix(cmd, args, prefix.Key, prefix.Value)
+			err := ParsePrefix(prefix.Key, prefix.Value)
 			CheckErr(err)
 		}
 		for _, prefix := range DefaultTags {
@@ -209,5 +209,4 @@ func InitProcedural(cmd *cobra.Command, args []string) error {
 			}
 		}
 	}
-	return nil
 }

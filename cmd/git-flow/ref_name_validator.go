@@ -11,7 +11,7 @@ import (
 type ValidationTarget int
 
 const (
-	REF_NAME_VALIDATION ValidationTarget = iota
+	RefNameValidation ValidationTarget = iota
 	PrefixNameValidation
 	TagNameValidation
 )
@@ -32,55 +32,54 @@ var (
 	GitReferenceMustContainSlash    = regexp.MustCompile(`^[^/]+$`)
 )
 
-func PrefixValidator(ref_name string) error {
-	if GitReferenceNotAt.MatchString(ref_name) {
-		return errors.New(fmt.Sprintf("Cannot only be '@': %s", ref_name))
+func PrefixValidator(refName string) error {
+	if GitReferenceNotAt.MatchString(refName) {
+		return errors.New(fmt.Sprintf("Cannot only be '@': %s", refName))
 	}
-	if GitReferenceNoLeadingDots.MatchString(ref_name) {
-		return errors.New(fmt.Sprintf("Cannot lead with '.': %s", ref_name))
+	if GitReferenceNoLeadingDots.MatchString(refName) {
+		return errors.New(fmt.Sprintf("Cannot lead with '.': %s", refName))
 	}
-	if GitReferenceNoAtBracket.MatchString(ref_name) {
-		return errors.New(fmt.Sprintf("Cannot contain '@{': %s", ref_name))
+	if GitReferenceNoAtBracket.MatchString(refName) {
+		return errors.New(fmt.Sprintf("Cannot contain '@{': %s", refName))
 	}
-	if GitReferenceNoSlashDot.MatchString(ref_name) {
-		return errors.New(fmt.Sprintf("Cannot contain '/.': %s", ref_name))
+	if GitReferenceNoSlashDot.MatchString(refName) {
+		return errors.New(fmt.Sprintf("Cannot contain '/.': %s", refName))
 	}
-	if GitReferenceNoMultipleDot.MatchString(ref_name) {
-		return errors.New(fmt.Sprintf("Cannot contain multiple consecutive '.': %s", ref_name))
+	if GitReferenceNoMultipleDot.MatchString(refName) {
+		return errors.New(fmt.Sprintf("Cannot contain multiple consecutive '.': %s", refName))
 	}
-	if GitReferenceNoMultipleSlash.MatchString(ref_name) {
-		return errors.New(fmt.Sprintf("Cannot contain multiple consecutive '/': %s", ref_name))
+	if GitReferenceNoMultipleSlash.MatchString(refName) {
+		return errors.New(fmt.Sprintf("Cannot contain multiple consecutive '/': %s", refName))
 	}
-	if GitReferenceNoSpecialChars.MatchString(ref_name) {
-		return errors.New(fmt.Sprintf("Contains an unallowed special character: %s", ref_name))
+	if GitReferenceNoSpecialChars.MatchString(refName) {
+		return errors.New(fmt.Sprintf("Contains an unallowed special character: %s", refName))
 	}
-	if GitReferenceNoDotLockEnd.MatchString(ref_name) {
-		return errors.New(fmt.Sprintf("Cannot end in '.', '.lock': %s", ref_name))
-	}
-	return nil
-}
-
-func ValidateRefName(ref_name string) error {
-	PrefixValidator(ref_name)
-	if GitReferenceMustContainSlash.MatchString(ref_name) {
-		return errors.New(fmt.Sprintf("Must contain at least one '/': %s", ref_name))
-	}
-	if GitReferenceNoSlashEnd.MatchString(ref_name) {
-		return errors.New(fmt.Sprintf("Cannot end in '/': %s", ref_name))
+	if GitReferenceNoDotLockEnd.MatchString(refName) {
+		return errors.New(fmt.Sprintf("Cannot end in '.', '.lock': %s", refName))
 	}
 	return nil
 }
 
-func ValidateBranchName(ref_name string) error {
-	return ValidateRefName(fmt.Sprintf("refs/heads/%s", ref_name))
+func ValidateRefName(refName string) error {
+	if GitReferenceMustContainSlash.MatchString(refName) {
+		return errors.New(fmt.Sprintf("Must contain at least one '/': %s", refName))
+	}
+	if GitReferenceNoSlashEnd.MatchString(refName) {
+		return errors.New(fmt.Sprintf("Cannot end in '/': %s", refName))
+	}
+	return PrefixValidator(refName)
 }
 
-func ValidatePrefixName(ref_name string) error {
-	return PrefixValidator(fmt.Sprintf("refs/heads/%s", ref_name))
+func ValidateBranchName(refName string) error {
+	return ValidateRefName(fmt.Sprintf("refs/heads/%s", refName))
 }
 
-func ValidateTagPrefix(tag_prefix string) error {
-	return ValidatePrefixName(tag_prefix)
+func ValidatePrefixName(refName string) error {
+	return PrefixValidator(fmt.Sprintf("refs/heads/%s", refName))
+}
+
+func ValidateTagPrefix(tagPrefix string) error {
+	return ValidatePrefixName(tagPrefix)
 }
 
 func PromptForInput(inputType ValidationTarget, promptMessage string, defaultValue string) string {
