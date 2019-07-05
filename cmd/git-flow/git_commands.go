@@ -1,4 +1,4 @@
-package main
+package gitflow
 
 func RevParseGitDir() CommandResponse {
 	return ExecCmd("git", "rev-parse", "--git-dir")

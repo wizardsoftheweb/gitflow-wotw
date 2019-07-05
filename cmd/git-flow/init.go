@@ -1,32 +1,48 @@
-package main
+package gitflow
 
 import (
 	"fmt"
 	"path/filepath"
 
 	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
+	"github.com/spf13/cobra"
 )
 
-var (
-	CommandInit = cli.Command{
-		Name: "init",
-		Flags: []cli.Flag{
-			cli.BoolFlag{
-				Name:  "force, f",
-				Usage: "Forces a reinitialization",
-			},
-		},
-		Action: CommandInitAction,
-	}
-)
+var InitCmd = &cobra.Command{
+	Use:              "init",
+	TraverseChildren: true,
+	Run: func(cmd *cobra.Command, args []string) {
+		InitProcedural()
+	},
+}
+
+var Defaults bool
+var Force bool
+
+func init() {
+	PackageCmd.AddCommand(InitCmd)
+	InitCmd.Flags().BoolVarP(
+		&Defaults,
+		"defaults",
+		"d",
+		false,
+		"Use defaults everywhere",
+	)
+	InitCmd.Flags().BoolVarP(
+		&Force,
+		"force",
+		"f",
+		false,
+		"Force reinitialization",
+	)
+}
 
 func GetKeyFromRef(branch string) string {
 	switch branch {
 	case "master":
-		return MASTER_BRANCH_KEY
+		return MasterBranchKey
 	}
-	return DEV_BRANCH_KEY
+	return DevBranchKey
 }
 
 func GetValueFromRef(branch string) string {
@@ -37,24 +53,24 @@ func GetValueFromRef(branch string) string {
 	return "dev"
 }
 
-func SharedPrep(context *cli.Context, branchName string) error {
-	if context.Bool("force") || !IsBranchConfigured(branchName) {
-		var check_existence bool
+func SharedPrep(branchName string) error {
+	if Force || !IsBranchConfigured(branchName) {
+		var checkExistence bool
 		var suggestion string
 		if 0 == len(Repo.LocalBranches()) {
-			check_existence = false
+			checkExistence = false
 			suggestion = GitConfig.GetWithDefault(GetKeyFromRef(branchName), branchName)
 		} else {
-			check_existence = true
+			checkExistence = true
 			suggestion = Repo.PickGoodSuggestion(branchName)
 			if "" == suggestion {
-				check_existence = false
+				checkExistence = false
 				suggestion = GitConfig.GetWithDefault(GetKeyFromRef(branchName), GetValueFromRef(branchName))
 			}
 		}
-		newValue := PromptForInput(REF_NAME_VALIDATION, PromptMessageFromBranch(branchName, suggestion), suggestion)
+		newValue := PromptForInput(RefNameValidation, PromptMessageFromBranch(branchName, suggestion), suggestion)
 		GitConfig.Write(GetKeyFromRef(branchName), newValue)
-		if check_existence {
+		if checkExistence {
 			CheckExistence(branchName, newValue)
 		}
 	}
@@ -98,17 +114,17 @@ func PromptMessageFromBranch(branchName string, suggestion string) string {
 
 }
 
-func ParsePrefix(context *cli.Context, prefixKey string, defaultValue string) error {
-	if !context.Bool("force") {
+func ParsePrefix(prefixKey string, defaultValue string) error {
+	if !Force {
 		return nil
 	} else {
 		var newValue string
-		if context.Bool("default") {
+		if Defaults {
 			newValue = defaultValue
 		} else {
 			value := GitConfig.GetWithDefault(prefixKey, defaultValue)
 			newValue = PromptForInput(
-				PREFIX_NAME_VALIDATION,
+				PrefixNameValidation,
 				fmt.Sprintf("Prefix for %s branches? [%s]", filepath.Base(prefixKey), defaultValue),
 				value,
 			)
@@ -118,7 +134,7 @@ func ParsePrefix(context *cli.Context, prefixKey string, defaultValue string) er
 	return nil
 }
 
-func InitProcedural(context *cli.Context) error {
+func InitProcedural() {
 	if !RevParseGitDir().Succeeded() {
 		GitInit()
 	} else {
@@ -129,17 +145,18 @@ func InitProcedural(context *cli.Context) error {
 		}
 	}
 	logrus.Trace("Repo has be identified")
-	if IsGitFlowInitialized() && !context.Bool("force") {
+	if IsGitFlowInitialized() && !Force {
 		logrus.Fatal(ErrAlreadyInitialized)
 	}
-	if context.Bool("default") {
-		fmt.Fprint(context.App.Writer, "Using default branch names")
+	if Defaults {
+		fmt.Println("Using default branch names")
 	}
 	for _, branchName := range []string{"master", "dev"} {
-		SharedPrep(context, branchName)
+		err := SharedPrep(branchName)
+		CheckErr(err)
 	}
-	devName := GitConfig.Get(DEV_BRANCH_KEY)
-	masterName := GitConfig.Get(MASTER_BRANCH_KEY)
+	devName := GitConfig.Get(DevBranchKey)
+	masterName := GitConfig.Get(MasterBranchKey)
 	if devName == masterName {
 		logrus.Fatal(ErrProductionMustDifferFromDevelopment)
 	}
@@ -164,24 +181,25 @@ func InitProcedural(context *cli.Context) error {
 		ExecCmd("git", "checkout", "-q", devName)
 	}
 
-	if context.Bool("force") || !ArePrefixesConfigured() {
-		fmt.Fprint(context.App.Writer, "Some prefixes need to be configured")
+	if Force || !ArePrefixesConfigured() {
+		fmt.Println("Some prefixes need to be configured")
 		for _, prefix := range DefaultPrefixes {
-			ParsePrefix(context, prefix.Key, prefix.Value)
+			err := ParsePrefix(prefix.Key, prefix.Value)
+			CheckErr(err)
 		}
 		for _, prefix := range DefaultTags {
 			value := GitConfig.Get(prefix.Key)
 			defaultValue := value
-			if context.Bool("force") || "" == value {
+			if Force || "" == value {
 				var newValue string
-				if context.Bool("default") {
+				if Defaults {
 					newValue = prefix.Value
 				} else {
 					if "" == value {
 						defaultValue = prefix.Value
 					}
 					newValue = PromptForInput(
-						TAG_NAME_VALIDATION,
+						TagNameValidation,
 						fmt.Sprintf("Prefix for %s tags? [%s]", prefix.Value, defaultValue),
 						defaultValue,
 					)
@@ -191,10 +209,4 @@ func InitProcedural(context *cli.Context) error {
 			}
 		}
 	}
-	return nil
-}
-
-func CommandInitAction(context *cli.Context) error {
-	logrus.Debug("CommandInitAction")
-	return InitProcedural(context)
 }

@@ -1,7 +1,6 @@
-package main
+package gitflow
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -23,7 +22,7 @@ var (
 )
 
 func (r *Repository) SpecificPrefixBranches(remote bool) []string {
-	prefixedBranches := []string{}
+	var prefixedBranches []string
 	for _, branch := range r.SpecificBranches(remote) {
 		if strings.HasPrefix(branch, r.Prefix) {
 			prefixedBranches = append(prefixedBranches, strings.Replace(branch, r.Prefix, "", 1))
@@ -33,7 +32,7 @@ func (r *Repository) SpecificPrefixBranches(remote bool) []string {
 }
 
 func (r *Repository) SpecificBranches(remote bool) []string {
-	branches := []string{}
+	var branches []string
 	result := BranchNoColor(remote)
 	for _, match := range GitBranchPattern.FindAllStringSubmatch(result.result, -1) {
 		branches = append(branches, match[1])
@@ -51,7 +50,6 @@ func (r *Repository) RemoteBranches() []string {
 
 func (r *Repository) CurrentBranch() string {
 	results := GitCurrentBranchPattern.FindStringSubmatch(BranchNoColor(false).String())
-	fmt.Println(results)
 	if 2 < len(results) {
 		logrus.Fatal(ErrCannotDetermineCurrentBranch)
 	}
@@ -95,7 +93,7 @@ func (r *Repository) PickGoodMasterSuggestion() string {
 }
 func (r *Repository) PickGoodDevSuggestion() string {
 	logrus.Trace("PickGoodDevSuggestion")
-	newMaster := GitConfig.Get(MASTER_BRANCH_KEY)
+	newMaster := GitConfig.Get(MasterBranchKey)
 	for _, suggestion := range DefaultDevSuggestions {
 		if suggestion != newMaster && r.HasLocalBranch(suggestion) {
 			return suggestion

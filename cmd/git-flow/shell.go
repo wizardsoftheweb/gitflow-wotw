@@ -1,15 +1,10 @@
-package main
+package gitflow
 
 import (
 	"os/exec"
-	"regexp"
 	"syscall"
 
 	"github.com/sirupsen/logrus"
-)
-
-var (
-	ScreenSizePattern = regexp.MustCompile(`^.*?(\d+)\.*?(\d+)\.*?$`)
 )
 
 type CommandResponse struct {
@@ -18,8 +13,8 @@ type CommandResponse struct {
 	exitErr  error
 }
 
-func (response CommandResponse) Succeeded() bool {
-	return 0 == response.exitCode
+func (c CommandResponse) Succeeded() bool {
+	return 0 == c.exitCode
 }
 
 func (c CommandResponse) Bool() bool {

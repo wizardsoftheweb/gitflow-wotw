@@ -1,4 +1,4 @@
-package main
+package gitflow
 
 import (
 	"fmt"
@@ -6,13 +6,17 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func CheckErr(err error) {
+	if nil != err {
+		logrus.Fatal(err)
+	}
+}
+
 func IsWorkingTreeClean() bool {
-	result := ExecCmd("git", "diff", "--no-ext-diff", "--ignore-submodules", "--quiet", "--exit-code")
-	if !result.Succeeded() {
+	if !ExecCmd("git", "diff", "--no-ext-diff", "--ignore-submodules", "--quiet", "--exit-code").Succeeded() {
 		logrus.Fatal(ErrUnstagedChanges)
 	}
-	result = ExecCmd("git", "diff-index", "--cached", "--quiet", "--ignore-submodules", "HEAD", "--")
-	if !result.Succeeded() {
+	if !ExecCmd("git", "diff-index", "--cached", "--quiet", "--ignore-submodules", "HEAD", "--").Succeeded() {
 		logrus.Fatal(ErrIndexUncommitted)
 	}
 	return true
