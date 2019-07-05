@@ -1,7 +1,6 @@
 package gitflow
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -51,7 +50,6 @@ func (r *Repository) RemoteBranches() []string {
 
 func (r *Repository) CurrentBranch() string {
 	results := GitCurrentBranchPattern.FindStringSubmatch(BranchNoColor(false).String())
-	fmt.Println(results)
 	if 2 < len(results) {
 		logrus.Fatal(ErrCannotDetermineCurrentBranch)
 	}

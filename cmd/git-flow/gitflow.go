@@ -11,7 +11,7 @@ var PackageCmd = &cobra.Command{
 	TraverseChildren: true,
 	Version:          PackageVersion,
 	PreRun: func(cmd *cobra.Command, args []string) {
-		cmd.ParseFlags()
+		BootstrapLogger(VerbosityFlagValue)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
@@ -28,7 +28,3 @@ func init() {
 		"Increases application verbosity",
 	)
 }
-
-//func PreRun(cmd *cobra.Command, args []string) {
-//	flag
-//}

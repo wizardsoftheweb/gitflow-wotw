@@ -2,11 +2,9 @@ package gitflow
 
 import (
 	"fmt"
-
-	"github.com/spf13/cobra"
 )
 
-func PassthroughThroughPrefixedBranchesWithErrorMessage(cmd *cobra.Command, args []string, remote bool) []string {
+func PassthroughThroughPrefixedBranchesWithErrorMessage(remote bool) []string {
 	branches := Repo.SpecificPrefixBranches(remote)
 	if 0 == len(branches) {
 		fmt.Println(
