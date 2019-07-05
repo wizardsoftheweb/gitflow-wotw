@@ -6,6 +6,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func CheckErr(err error) {
+	if nil != err {
+		logrus.Fatal(err)
+	}
+}
+
 func IsWorkingTreeClean() bool {
 	result := ExecCmd("git", "diff", "--no-ext-diff", "--ignore-submodules", "--quiet", "--exit-code")
 	if !result.Succeeded() {
